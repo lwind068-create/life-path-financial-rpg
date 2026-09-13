@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-hud: "Orbitron", "Space Grotesk", ui-sans-serif, sans-serif;
+  --font-narrative: "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  /* Fixed game palette — deep navy/charcoal base, distinct from the
+     player's customizable --accent (set per-run in AccentTheme.tsx). */
+  --bg-void: #090c14;
+  --bg-panel: #10152344;
+  --bg-panel-solid: #131a2c;
+  --bg-panel-raised: #1a2340;
+  --hairline: #2a3454;
+  --ink: #eef1f8;
+  --ink-dim: #8891ab;
+  --ink-faint: #565f7d;
+
+  /* Signature progress/XP color — used ONLY for the chapter tracker and
+     streak, never reused as a stat color or a "success" green. */
+  --progress: #ffb020;
+  --progress-glow: #ffd873;
+  --progress-ink: #2b1600;
+
+  /* Per-stat identity colors — fixed, not player-customizable, so they
+     stay instantly recognizable across every run. */
+  --stat-savings: #2fe6a4;
+  --stat-savings-dim: #123527;
+  --stat-debt: #ff4d6d;
+  --stat-debt-dim: #3a1420;
+  --stat-stress: #b98bff;
+  --stat-stress-dim: #241a3d;
+
+  background-color: var(--bg-void);
+  color: var(--ink);
+  font-family: var(--font-display);
+  /* Accent theme defaults — overridden per-player once a character is built. */
+  --accent: #10b981;
+  --accent-soft: #6ee7b7;
+  --accent-deep: #065f46;
+  --accent-ink: #022c22;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.font-hud {
+  font-family: var(--font-hud);
+  letter-spacing: 0.02em;
+}
+
+.font-narrative {
+  font-family: var(--font-narrative);
+}
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(-4%, -6%) scale(1); }
+  50% { transform: translate(4%, 6%) scale(1.15); }
+}
+
+@keyframes drift-b {
+  0%, 100% { transform: translate(6%, 4%) scale(1.1); }
+  50% { transform: translate(-6%, -4%) scale(0.95); }
+}
+
+.bg-blob-a {
+  animation: drift-a 22s ease-in-out infinite;
+}
+
+.bg-blob-b {
+  animation: drift-b 26s ease-in-out infinite;
+}
+
+@keyframes stat-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pulse-color, var(--accent)) 55%, transparent); }
+  100% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--pulse-color, var(--accent)) 0%, transparent); }
+}
+
+.stat-pulse {
+  animation: stat-pulse 0.7s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-blob-a,
+  .bg-blob-b,
+  .stat-pulse {
+    animation: none;
+  }
+}

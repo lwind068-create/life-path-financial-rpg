@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Security rules for the anonymous data-collection backend (see
+// src/engine/firebaseClient.ts, logDecision.ts, logPlayerSummary.ts).
+//
+// There's no Firebase Auth in this app — sessionId is just a random id
+// generated client-side (src/engine/sessionId.ts), not a verified
+// identity. So these rules can only do shape validation, not "prove this
+// write really came from that session." That's an accepted tradeoff for
+// an anonymous educational game: the worst a malicious client can do is
+// write junk rows, not read or corrupt anyone else's data (reads/updates/
+// deletes are blocked entirely — aggregate reporting goes through
+// firebase-admin via scripts/fetch-stats.mjs, which bypasses these rules
+// with a service account).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /decisions/{decisionId} {
+      allow create: if request.resource.data.keys().hasAll(
+          ['arcId', 'chapterId', 'choiceId', 'financialQualityScore', 'timestamp', 'sessionId']
+        )
+        && request.resource.data.arcId is string
+        && request.resource.data.chapterId is string
+        && request.resource.data.choiceId is string
+        && request.resource.data.sessionId is string
+        && request.resource.data.financialQualityScore is number
+        && request.resource.data.timestamp is number;
+      allow read, update, delete: if false;
+    }
+
+    match /players/{sessionId} {
+      allow create, update: if request.resource.data.sessionId == sessionId
+        && request.resource.data.sessionId is string
+        && request.resource.data.arcId is string;
+      allow read, delete: if false;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
