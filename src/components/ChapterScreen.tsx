@@ -177,6 +177,7 @@ export function ChapterScreen() {
               statsHistory={progress.statsHistory}
               randomEvent={activeRandomEvent}
               outcomeTickers={currentQuestion?.outcomeTickers}
+              pointsAwarded={lastOutcome.pointsAwarded}
               onContinue={acknowledgeOutcome}
             />
           )}

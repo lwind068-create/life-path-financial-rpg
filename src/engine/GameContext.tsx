@@ -16,6 +16,8 @@ import {
 } from "./logDecision";
 import { computeAverageQualityScore, computeKnowledgeGain } from "./scoring";
 import { logPlayerSummary } from "./logPlayerSummary";
+import { computeLifePoints } from "./lifePoints";
+import { ACCENT_OPTIONS, UNLOCKABLE_ACCENTS } from "../content/characterOptions";
 
 const PROFILE_KEY = "lifepath:profile";
 const PROGRESS_KEY = "lifepath:progress";
@@ -39,6 +41,12 @@ interface PlayerProfile {
   onboarded: boolean;
   /** Running total across the whole story. Since there's only ever one save slot now, this is the same as `progress.stats` — kept as its own field so it survives a "play again" without also wiping the character. */
   cumulativeStats: PlayerStats;
+  /** Spendable Life Points balance — see engine/lifePoints.ts. Goes down when a color is unlocked. */
+  lifePoints: number;
+  /** Lifetime Life Points ever earned, never decreases — drives the player's rank/title. */
+  totalLifePointsEarned: number;
+  /** Ids of UNLOCKABLE_ACCENTS the player has purchased. */
+  unlockedAccentIds: string[];
 }
 
 /** The single, whole-story save slot. */
@@ -58,7 +66,15 @@ interface StoryProgress {
 }
 
 function freshProfile(): PlayerProfile {
-  return { characterName: "", accentId: null, onboarded: false, cumulativeStats: { ...initialStats } };
+  return {
+    characterName: "",
+    accentId: null,
+    onboarded: false,
+    cumulativeStats: { ...initialStats },
+    lifePoints: 0,
+    totalLifePointsEarned: 0,
+    unlockedAccentIds: [],
+  };
 }
 
 function addEffects(base: PlayerStats, effects?: Partial<PlayerStats>): PlayerStats {
@@ -119,7 +135,7 @@ interface GameContextValue {
   /** Set on the most recent choice, if its random event fired; cleared on advance. */
   activeRandomEvent: RandomEvent | null;
   /** Set right after a choice is made, so the outcome screen can render it before advancing. */
-  lastOutcome: { choice: OutcomeChoice; statsBefore: PlayerStats } | null;
+  lastOutcome: { choice: OutcomeChoice; statsBefore: PlayerStats; pointsAwarded: number } | null;
   totalChapterCount: number;
   setCharacterName: (name: string) => void;
   setAccentId: (id: string) => void;
@@ -131,6 +147,13 @@ interface GameContextValue {
   resetStoryProgress: () => void;
   /** Wipes everything: character, color, progress, the whole decision log. Starts over from the name screen. */
   resetEverything: () => void;
+  /**
+   * Equips `id` if it's a starter color or already-purchased unlockable one.
+   * If it's an unpurchased UNLOCKABLE_ACCENTS color, spends the required
+   * Life Points and unlocks it first. Returns false (no-op) if it's an
+   * unknown id or the player can't afford it yet.
+   */
+  unlockAccent: (id: string) => boolean;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -142,6 +165,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [lastOutcome, setLastOutcome] = useState<{
     choice: OutcomeChoice;
     statsBefore: PlayerStats;
+    pointsAwarded: number;
   } | null>(null);
 
   useEffect(() => {
@@ -246,8 +270,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       const statsAfter = addEffects(addEffects(statsBefore, choice.statEffects), firedEvent?.statEffects);
 
+      const isMeasurementChapter = Boolean(currentChapter.isBaselineChoice || currentChapter.isMirrorChoice);
+      const pointsAwarded = computeLifePoints(choice.financialQualityScore, isMeasurementChapter);
+
       setActiveRandomEvent(firedEvent);
-      setLastOutcome({ choice, statsBefore });
+      setLastOutcome({ choice, statsBefore, pointsAwarded });
       setProgress((p) => ({
         ...p,
         stats: statsAfter,
@@ -260,9 +287,32 @@ export function GameProvider({ children }: { children: ReactNode }) {
           addEffects(prof.cumulativeStats, choice.statEffects),
           firedEvent?.statEffects,
         ),
+        lifePoints: prof.lifePoints + pointsAwarded,
+        totalLifePointsEarned: prof.totalLifePointsEarned + pointsAwarded,
       }));
     },
     [currentChapter, currentQuestion, progress.stats],
+  );
+
+  const unlockAccent = useCallback(
+    (id: string) => {
+      const isStarter = ACCENT_OPTIONS.some((a) => a.id === id);
+      const isAlreadyOwned = isStarter || profile.unlockedAccentIds.includes(id);
+      if (isAlreadyOwned) {
+        setProfile((p) => ({ ...p, accentId: id }));
+        return true;
+      }
+      const option = UNLOCKABLE_ACCENTS.find((a) => a.id === id);
+      if (!option || profile.lifePoints < option.cost) return false;
+      setProfile((p) => ({
+        ...p,
+        lifePoints: p.lifePoints - option.cost,
+        unlockedAccentIds: [...p.unlockedAccentIds, id],
+        accentId: id,
+      }));
+      return true;
+    },
+    [profile],
   );
 
   const acknowledgeOutcome = useCallback(() => {
@@ -330,6 +380,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       acknowledgeOutcome,
       resetStoryProgress,
       resetEverything,
+      unlockAccent,
     }),
     [
       currentChapter,
@@ -348,6 +399,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       acknowledgeOutcome,
       resetStoryProgress,
       resetEverything,
+      unlockAccent,
     ],
   );
 

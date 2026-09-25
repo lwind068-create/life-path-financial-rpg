@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Zap } from "lucide-react";
 import type { PlayerStats, RandomEvent, TickerConfig } from "../content/types";
 import { pickAftermath } from "../content/aftermath";
 import { StatBar } from "./StatBar";
@@ -14,6 +14,8 @@ interface OutcomeAnimationProps {
   randomEvent: RandomEvent | null;
   /** Optional "months later" settled ticker snapshot for this question. */
   outcomeTickers?: TickerConfig[];
+  /** Life Points earned for this choice (see engine/lifePoints.ts). */
+  pointsAwarded: number;
   onContinue: () => void;
 }
 
@@ -23,6 +25,7 @@ export function OutcomeAnimation({
   statsHistory,
   randomEvent,
   outcomeTickers,
+  pointsAwarded,
   onContinue,
 }: OutcomeAnimationProps) {
   // Component remounts fresh on every new outcome (see ChapterScreen's
@@ -52,9 +55,25 @@ export function OutcomeAnimation({
         </motion.div>
       )}
 
-      <p className="font-narrative text-base sm:text-lg leading-relaxed text-[var(--ink)]">
-        {choice.outcomeNarrative}
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-narrative text-base sm:text-lg leading-relaxed text-[var(--ink)]">
+          {choice.outcomeNarrative}
+        </p>
+        <motion.span
+          key={pointsAwarded}
+          initial={{ opacity: 0, y: -6, scale: 0.85 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 18 }}
+          className="font-display flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold"
+          style={{
+            background: "color-mix(in srgb, var(--progress) 18%, transparent)",
+            color: "var(--progress-glow)",
+          }}
+        >
+          <Zap size={12} strokeWidth={2.5} fill="var(--progress-glow)" />+
+          {pointsAwarded}
+        </motion.span>
+      </div>
 
       <motion.p
         initial={{ opacity: 0 }}

@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gamepad2, UserRound, Share2, ArrowRight } from "lucide-react";
+import { Gamepad2, UserRound, Share2, ArrowRight, Zap } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { CHAPTER_MARKERS, ORDERED_SCENE_IDS } from "../content/arcs";
 import { PlayerBadge } from "../components/PlayerBadge";
@@ -60,13 +60,21 @@ export function Home() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center gap-3 rounded-2xl border px-5 py-3"
+          className="flex w-full max-w-sm items-center gap-3 rounded-2xl border px-5 py-3"
           style={{ borderColor: "var(--hairline)", background: "var(--bg-panel-raised)" }}
         >
           <PlayerBadge name={profile.characterName} size="sm" />
           <span className="text-sm text-[var(--ink-dim)]">
             Welcome back, {profile.characterName}.
           </span>
+          <Link
+            to="/character"
+            className="font-hud ml-auto flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition-opacity hover:opacity-80"
+            style={{ background: "color-mix(in srgb, var(--progress) 16%, transparent)", color: "var(--progress-glow)" }}
+          >
+            <Zap size={12} strokeWidth={2.5} fill="var(--progress-glow)" />
+            {profile.lifePoints}
+          </Link>
         </motion.div>
       )}
 

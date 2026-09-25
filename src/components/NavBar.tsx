@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Compass, Menu, RotateCcw, Trash2 } from "lucide-react";
+import { Compass, Menu, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { PlayerBadge } from "./PlayerBadge";
 
@@ -32,7 +32,11 @@ export function NavBar() {
         </Link>
 
         <div className="flex items-center gap-3">
-          {profile.characterName && <PlayerBadge name={profile.characterName} size="sm" />}
+          {profile.characterName && (
+            <Link to="/character" aria-label="Upgrade character">
+              <PlayerBadge name={profile.characterName} size="sm" />
+            </Link>
+          )}
           <div className="relative">
             <button
               type="button"
@@ -77,6 +81,16 @@ export function NavBar() {
                     >
                       {hasStory ? "Continue story" : "Play"}
                     </Link>
+                    {hasStory && (
+                      <Link
+                        to="/character"
+                        onClick={close}
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-[var(--ink)] transition-colors hover:bg-white/5"
+                      >
+                        <Sparkles size={14} strokeWidth={2} style={{ color: "var(--accent)" }} />
+                        Upgrade character
+                      </Link>
+                    )}
                     <Link
                       to="/about"
                       onClick={close}

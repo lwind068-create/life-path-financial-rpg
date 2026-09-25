@@ -6,6 +6,7 @@ import { NavBar } from "./components/NavBar";
 import { Home } from "./routes/Home";
 import { Game } from "./routes/Game";
 import { About } from "./routes/About";
+import { Character } from "./routes/Character";
 import { Debug } from "./routes/Debug";
 
 function Shell() {
@@ -29,6 +30,7 @@ function Shell() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/play" element={<Game />} />
+        <Route path="/character" element={<Character />} />
         <Route path="/about" element={<About />} />
       </Routes>
     </AccentTheme>
