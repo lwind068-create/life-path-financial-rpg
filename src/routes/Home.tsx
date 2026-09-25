@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gamepad2, UserRound, Share2, ArrowRight, Check } from "lucide-react";
+import { Gamepad2, UserRound, Share2, ArrowRight } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { CHAPTER_MARKERS, ORDERED_SCENE_IDS } from "../content/arcs";
 import { PlayerBadge } from "../components/PlayerBadge";
-import { ChapterIcon } from "../components/ChapterIcon";
+import { ChapterPath } from "../components/ChapterPath";
 import { Leaderboard } from "../components/Leaderboard";
 
 const FEATURES = [
@@ -17,7 +17,7 @@ export function Home() {
   const navigate = useNavigate();
   const { profile, progress, currentChapter, resetStoryProgress } = useGame();
   const hasCharacter = Boolean(profile.characterName);
-  const isDone = currentChapter.isEnding;
+  const isDone = Boolean(currentChapter.isEnding);
 
   const currentIndex = isDone
     ? ORDERED_SCENE_IDS.length
@@ -82,62 +82,16 @@ export function Home() {
         <ArrowRight size={20} strokeWidth={2.5} />
       </motion.button>
 
-      <div className="flex w-full flex-col gap-2.5">
-        {CHAPTER_MARKERS.map((marker, i) => {
-          const indices = marker.sceneIds.map((id) => ORDERED_SCENE_IDS.indexOf(id));
-          const minIndex = Math.min(...indices);
-          const maxIndex = Math.max(...indices);
-          const done = maxIndex < currentIndex;
-          const isCurrent = hasCharacter && !isDone && currentIndex >= minIndex && currentIndex <= maxIndex;
-
-          return (
-            <div
-              key={marker.title}
-              className="flex items-center gap-4 rounded-2xl border px-5 py-3.5 text-left"
-              style={{
-                borderColor: isCurrent ? "color-mix(in srgb, var(--accent) 45%, var(--hairline))" : "var(--hairline)",
-                background: "var(--bg-panel-raised)",
-                boxShadow: isCurrent ? "inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent)" : undefined,
-              }}
-            >
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                style={{
-                  background: done || isCurrent
-                    ? "color-mix(in srgb, var(--accent) 18%, transparent)"
-                    : "var(--bg-panel-solid)",
-                  color: done || isCurrent ? "var(--accent)" : "var(--ink-faint)",
-                }}
-              >
-                <ChapterIcon name={marker.icon} size={19} />
-              </div>
-              <div className="flex flex-1 flex-col">
-                <span className="font-display text-[10px] font-semibold uppercase tracking-wide text-[var(--ink-faint)]">
-                  Chapter {i + 1}
-                </span>
-                <span
-                  className="text-sm font-bold"
-                  style={{ color: done || isCurrent ? "var(--ink)" : "var(--ink-dim)" }}
-                >
-                  {marker.title}
-                </span>
-              </div>
-              {done && (
-                <span
-                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "color-mix(in srgb, var(--stat-savings) 20%, transparent)", color: "var(--stat-savings)" }}
-                >
-                  <Check size={10} strokeWidth={3} /> Done
-                </span>
-              )}
-              {isCurrent && (
-                <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--accent)" }}>
-                  Now
-                </span>
-              )}
-            </div>
-          );
-        })}
+      <div className="w-full py-4">
+        <ChapterPath
+          markers={CHAPTER_MARKERS}
+          orderedSceneIds={ORDERED_SCENE_IDS}
+          currentIndex={currentIndex}
+          hasCharacter={hasCharacter}
+          isDone={isDone}
+          ctaLabel={label}
+          onActivate={openStory}
+        />
       </div>
 
       {hasCharacter && (
