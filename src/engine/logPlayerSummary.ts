@@ -11,6 +11,7 @@
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db, remoteLoggingEnabled } from "./firebaseClient";
 import { getSessionId } from "./sessionId";
+import { getTrafficSource } from "./analytics";
 
 export interface PlayerSummaryInput {
   arcId: string;
@@ -38,6 +39,9 @@ export async function logPlayerSummary(input: PlayerSummaryInput): Promise<void>
         netWorth: input.netWorth,
         chaptersCompleted: input.chaptersCompleted,
         completed: input.completed,
+        // First-touch channel (utm_source / referrer) — see analytics.ts.
+        trafficSource: getTrafficSource().source,
+        trafficCampaign: getTrafficSource().campaign,
         updatedAt: serverTimestamp(),
       },
       { merge: true },

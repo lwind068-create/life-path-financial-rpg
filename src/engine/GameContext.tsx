@@ -16,8 +16,10 @@ import {
 } from "./logDecision";
 import { computeAverageQualityScore, computeKnowledgeGain } from "./scoring";
 import { logPlayerSummary } from "./logPlayerSummary";
+import { publishLeaderboardEntry } from "./leaderboard";
+import { track } from "./analytics";
 import { computeLifePoints } from "./lifePoints";
-import { ACCENT_OPTIONS, UNLOCKABLE_ACCENTS } from "../content/characterOptions";
+import { ACCENT_OPTIONS, UNLOCKABLE_ACCENTS, UNLOCKABLE_TITLES, UNLOCKABLE_FRAMES } from "../content/characterOptions";
 
 const PROFILE_KEY = "lifepath:profile";
 const PROGRESS_KEY = "lifepath:progress";
@@ -47,6 +49,14 @@ interface PlayerProfile {
   totalLifePointsEarned: number;
   /** Ids of UNLOCKABLE_ACCENTS the player has purchased. */
   unlockedAccentIds: string[];
+  /** Equipped title id from UNLOCKABLE_TITLES, or null/"none" for no title. Purely cosmetic. */
+  titleId: string | null;
+  /** Ids of UNLOCKABLE_TITLES the player has purchased. */
+  unlockedTitleIds: string[];
+  /** Equipped badge frame id from UNLOCKABLE_FRAMES, or null/"none" for no frame. Purely cosmetic. */
+  frameId: string | null;
+  /** Ids of UNLOCKABLE_FRAMES the player has purchased. */
+  unlockedFrameIds: string[];
 }
 
 /** The single, whole-story save slot. */
@@ -74,6 +84,10 @@ function freshProfile(): PlayerProfile {
     lifePoints: 0,
     totalLifePointsEarned: 0,
     unlockedAccentIds: [],
+    titleId: null,
+    unlockedTitleIds: [],
+    frameId: null,
+    unlockedFrameIds: [],
   };
 }
 
@@ -154,6 +168,10 @@ interface GameContextValue {
    * unknown id or the player can't afford it yet.
    */
   unlockAccent: (id: string) => boolean;
+  /** Same equip-or-purchase-then-equip behavior as unlockAccent, for cosmetic titles. "none" always equips for free. */
+  unlockTitle: (id: string) => boolean;
+  /** Same equip-or-purchase-then-equip behavior as unlockAccent, for cosmetic badge frames. "none" always equips for free. */
+  unlockFrame: (id: string) => boolean;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -203,6 +221,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       chaptersCompleted: progress.visitedChapterIds.length,
       completed: Boolean(currentChapterNode?.isEnding),
     });
+    void publishLeaderboardEntry({
+      name: profile.characterName,
+      // Same figure the on-screen board shows (Home/EndingScreen).
+      netWorth: profile.cumulativeStats.savings - profile.cumulativeStats.debt,
+      lifePoints: profile.totalLifePointsEarned,
+    });
+    track("chapter_completed", { chapters_completed: progress.visitedChapterIds.length });
+    if (currentChapterNode?.isEnding) track("game_completed", { net_worth: netWorth });
     // Intentionally keyed only on chapter-completion count — this should
     // fire once per chapter boundary, not on every stat/profile tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -315,6 +341,46 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [profile],
   );
 
+  const unlockTitle = useCallback(
+    (id: string) => {
+      const isAlreadyOwned = id === "none" || profile.unlockedTitleIds.includes(id);
+      if (isAlreadyOwned) {
+        setProfile((p) => ({ ...p, titleId: id }));
+        return true;
+      }
+      const option = UNLOCKABLE_TITLES.find((t) => t.id === id);
+      if (!option || profile.lifePoints < option.cost) return false;
+      setProfile((p) => ({
+        ...p,
+        lifePoints: p.lifePoints - option.cost,
+        unlockedTitleIds: [...p.unlockedTitleIds, id],
+        titleId: id,
+      }));
+      return true;
+    },
+    [profile],
+  );
+
+  const unlockFrame = useCallback(
+    (id: string) => {
+      const isAlreadyOwned = id === "none" || profile.unlockedFrameIds.includes(id);
+      if (isAlreadyOwned) {
+        setProfile((p) => ({ ...p, frameId: id }));
+        return true;
+      }
+      const option = UNLOCKABLE_FRAMES.find((f) => f.id === id);
+      if (!option || profile.lifePoints < option.cost) return false;
+      setProfile((p) => ({
+        ...p,
+        lifePoints: p.lifePoints - option.cost,
+        unlockedFrameIds: [...p.unlockedFrameIds, id],
+        frameId: id,
+      }));
+      return true;
+    },
+    [profile],
+  );
+
   const acknowledgeOutcome = useCallback(() => {
     if (!lastOutcome) return;
     setLastOutcome(null);
@@ -381,6 +447,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       resetStoryProgress,
       resetEverything,
       unlockAccent,
+      unlockTitle,
+      unlockFrame,
     }),
     [
       currentChapter,
@@ -400,6 +468,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       resetStoryProgress,
       resetEverything,
       unlockAccent,
+      unlockTitle,
+      unlockFrame,
     ],
   );
 

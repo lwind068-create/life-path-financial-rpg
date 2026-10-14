@@ -8,7 +8,7 @@
 // e.g. no Firebase project has been set up yet — `db` is null and every
 // caller in this app treats that as "remote logging is off" and silently
 // no-ops. Never throws, never blocks gameplay.
-import { initializeApp, type FirebaseOptions } from "firebase/app";
+import { initializeApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 const config: FirebaseOptions = {
@@ -18,15 +18,20 @@ const config: FirebaseOptions = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  // Optional: only present once Google Analytics is enabled on the Firebase
+  // project. Without it, engine/analytics.ts quietly skips GA events.
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || undefined,
 };
 
 const isConfigured = Boolean(config.apiKey && config.projectId && config.appId);
 
 export const remoteLoggingEnabled = isConfigured;
 
-export const db: Firestore | null = isConfigured
-  ? getFirestore(initializeApp(config))
-  : null;
+export const firebaseApp: FirebaseApp | null = isConfigured ? initializeApp(config) : null;
+
+export const db: Firestore | null = firebaseApp ? getFirestore(firebaseApp) : null;
+
+export const analyticsConfigured = Boolean(firebaseApp && config.measurementId);
 
 if (!isConfigured && import.meta.env.DEV) {
   // eslint-disable-next-line no-console
