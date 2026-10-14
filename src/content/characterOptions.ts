@@ -53,3 +53,57 @@ export const UNLOCKABLE_ACCENTS: UnlockableAccent[] = [
   { id: "ice", label: "Ice", primary: "#38bdf8", secondary: "#bae6fd", deep: "#0c4a6e", onPrimary: "#02131f", cost: 300 },
   { id: "magenta", label: "Magenta", primary: "#d946ef", secondary: "#f0abfc", deep: "#701a75", onPrimary: "#2b0630", cost: 400 },
 ];
+
+// ---------------------------------------------------------------------------
+// Titles — purely cosmetic flair text, unlocked with Life Points and shown
+// next to the player's name on the Character page. No gameplay effect.
+// ---------------------------------------------------------------------------
+
+export interface Title {
+  id: string;
+  label: string;
+  cost: number;
+}
+
+/** Always available, free, equipped by default — clears any purchased title. */
+export const STARTER_TITLE: Title = { id: "none", label: "No title", cost: 0 };
+
+export const UNLOCKABLE_TITLES: Title[] = [
+  { id: "budget-boss", label: "Budget Boss", cost: 60 },
+  { id: "risk-taker", label: "Risk Taker", cost: 120 },
+  { id: "frugal-legend", label: "Frugal Legend", cost: 180 },
+  { id: "market-mogul", label: "Market Mogul", cost: 260 },
+  { id: "money-whisperer", label: "Money Whisperer", cost: 350 },
+];
+
+export function getTitle(id: string | null | undefined): Title {
+  return UNLOCKABLE_TITLES.find((t) => t.id === id) ?? STARTER_TITLE;
+}
+
+// ---------------------------------------------------------------------------
+// Badge frames — a decorative ring/glow around PlayerBadge, unlocked with
+// Life Points. Purely cosmetic, layered on top of the accent-color ring.
+// ---------------------------------------------------------------------------
+
+export interface Frame {
+  id: string;
+  label: string;
+  cost: number;
+  /** Extra CSS box-shadow layer(s) drawn around the badge, on top of the accent ring. */
+  ring: string;
+}
+
+/** Always available, free, equipped by default — clears any purchased frame. */
+export const STARTER_FRAME: Frame = { id: "none", label: "No frame", cost: 0, ring: "" };
+
+export const UNLOCKABLE_FRAMES: Frame[] = [
+  { id: "halo", label: "Halo", cost: 90, ring: "0 0 0 3px #fde047, 0 0 16px 2px rgba(253,224,71,0.5)" },
+  { id: "frost", label: "Frost", cost: 160, ring: "0 0 0 3px #bae6fd, 0 0 16px 2px rgba(186,230,253,0.5)" },
+  { id: "ember", label: "Ember", cost: 240, ring: "0 0 0 3px #fb7185, 0 0 16px 2px rgba(251,113,133,0.5)" },
+  { id: "royal", label: "Royal", cost: 320, ring: "0 0 0 3px #c4b5fd, 0 0 16px 2px rgba(196,181,253,0.5)" },
+];
+
+export function getFrame(id: string | null | undefined): Frame {
+  return UNLOCKABLE_FRAMES.find((f) => f.id === id) ?? STARTER_FRAME;
+}
+
