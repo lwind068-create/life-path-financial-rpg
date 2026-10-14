@@ -4,8 +4,10 @@ import { Gamepad2, UserRound, Share2, ArrowRight, Zap } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { CHAPTER_MARKERS, ORDERED_SCENE_IDS } from "../content/arcs";
 import { PlayerBadge } from "../components/PlayerBadge";
+import { getFrame } from "../content/characterOptions";
 import { ChapterPath } from "../components/ChapterPath";
 import { Leaderboard } from "../components/Leaderboard";
+import { track } from "../engine/analytics";
 
 const FEATURES = [
   { Icon: Gamepad2, title: "One continuous story", body: "Chapters flow into each other, real choices throughout." },
@@ -26,6 +28,7 @@ export function Home() {
   const label = isDone ? "Play again" : hasCharacter ? "Continue" : "Start";
 
   const openStory = () => {
+    track("start_clicked", { label: isDone ? "play_again" : hasCharacter ? "continue" : "start" });
     if (isDone) resetStoryProgress();
     navigate("/play");
   };
@@ -51,8 +54,7 @@ export function Home() {
           Life<span style={{ color: "var(--accent)" }}>-Path</span>
         </h1>
         <p className="max-w-md text-base text-[var(--ink-dim)] sm:text-lg">
-          Every dollar that comes in or goes out is yours to manage. One story, start to finish,
-          one choice at a time.
+          One life. $0. Every choice changes your future &mdash; how rich do you end up?
         </p>
       </motion.div>
 
@@ -63,7 +65,7 @@ export function Home() {
           className="flex w-full max-w-sm items-center gap-3 rounded-2xl border px-5 py-3"
           style={{ borderColor: "var(--hairline)", background: "var(--bg-panel-raised)" }}
         >
-          <PlayerBadge name={profile.characterName} size="sm" />
+          <PlayerBadge name={profile.characterName} size="sm" frame={getFrame(profile.frameId)} />
           <span className="text-sm text-[var(--ink-dim)]">
             Welcome back, {profile.characterName}.
           </span>
@@ -107,6 +109,7 @@ export function Home() {
           <Leaderboard
             playerName={profile.characterName}
             playerNetWorth={profile.cumulativeStats.savings - profile.cumulativeStats.debt}
+            playerLifePoints={profile.totalLifePointsEarned}
             compact
           />
         </div>

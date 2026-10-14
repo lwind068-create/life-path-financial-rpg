@@ -3,7 +3,19 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Check, Lock, Zap } from "lucide-react";
 import { useGame } from "../engine/GameContext";
-import { ACCENT_OPTIONS, UNLOCKABLE_ACCENTS, type AccentOption, type UnlockableAccent } from "../content/characterOptions";
+import {
+  ACCENT_OPTIONS,
+  UNLOCKABLE_ACCENTS,
+  STARTER_TITLE,
+  UNLOCKABLE_TITLES,
+  STARTER_FRAME,
+  UNLOCKABLE_FRAMES,
+  getFrame,
+  type AccentOption,
+  type UnlockableAccent,
+  type Title,
+  type Frame,
+} from "../content/characterOptions";
 import { RANKS, getRank, getRankProgress } from "../engine/lifePoints";
 import { PlayerBadge } from "../components/PlayerBadge";
 
@@ -12,24 +24,45 @@ function isUnlockable(option: AccentOption | UnlockableAccent): option is Unlock
 }
 
 export function Character() {
-  const { profile, unlockAccent } = useGame();
+  const { profile, unlockAccent, unlockTitle, unlockFrame } = useGame();
   const [shakeId, setShakeId] = useState<string | null>(null);
 
   const rank = getRank(profile.totalLifePointsEarned);
   const nextRank = RANKS[RANKS.findIndex((r) => r.id === rank.id) + 1] ?? null;
   const rankProgress = getRankProgress(profile.totalLifePointsEarned);
+  const equippedFrame = getFrame(profile.frameId);
+  const equippedTitle = profile.titleId
+    ? (UNLOCKABLE_TITLES.find((t) => t.id === profile.titleId) ?? null)
+    : null;
 
   const allColors: (AccentOption | UnlockableAccent)[] = [...ACCENT_OPTIONS, ...UNLOCKABLE_ACCENTS];
+  const allTitles: Title[] = [STARTER_TITLE, ...UNLOCKABLE_TITLES];
+  const allFrames: Frame[] = [STARTER_FRAME, ...UNLOCKABLE_FRAMES];
 
-  const handlePick = (option: AccentOption | UnlockableAccent) => {
+  const shake = (id: string) => {
+    setShakeId(id);
+    window.setTimeout(() => setShakeId((cur) => (cur === id ? null : cur)), 400);
+  };
+
+  const handlePickColor = (option: AccentOption | UnlockableAccent) => {
     const owned = !isUnlockable(option) || profile.unlockedAccentIds.includes(option.id);
     const affordable = isUnlockable(option) ? profile.lifePoints >= option.cost : true;
-    if (!owned && !affordable) {
-      setShakeId(option.id);
-      window.setTimeout(() => setShakeId((cur) => (cur === option.id ? null : cur)), 400);
-      return;
-    }
+    if (!owned && !affordable) return shake(option.id);
     unlockAccent(option.id);
+  };
+
+  const handlePickTitle = (option: Title) => {
+    const owned = option.id === "none" || profile.unlockedTitleIds.includes(option.id);
+    const affordable = profile.lifePoints >= option.cost;
+    if (!owned && !affordable) return shake(option.id);
+    unlockTitle(option.id);
+  };
+
+  const handlePickFrame = (option: Frame) => {
+    const owned = option.id === "none" || profile.unlockedFrameIds.includes(option.id);
+    const affordable = profile.lifePoints >= option.cost;
+    if (!owned && !affordable) return shake(option.id);
+    unlockFrame(option.id);
   };
 
   return (
@@ -49,17 +82,27 @@ export function Character() {
         style={{ borderColor: "var(--hairline)", background: "var(--bg-panel-solid)" }}
       >
         <div className="flex items-center gap-4">
-          <PlayerBadge name={profile.characterName || "?"} size="lg" />
+          <PlayerBadge name={profile.characterName || "?"} size="lg" frame={equippedFrame} />
           <div className="flex flex-col gap-1">
             <h1 className="text-xl font-bold text-[var(--ink)] sm:text-2xl">
               {profile.characterName || "Your character"}
             </h1>
-            <span
-              className="font-display w-fit rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide"
-              style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent)" }}
-            >
-              {rank.title}
-            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span
+                className="font-display w-fit rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide"
+                style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent)" }}
+              >
+                {rank.title}
+              </span>
+              {equippedTitle && (
+                <span
+                  className="font-display w-fit rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide"
+                  style={{ background: "color-mix(in srgb, var(--progress) 18%, transparent)", color: "var(--progress-glow)" }}
+                >
+                  {equippedTitle.label}
+                </span>
+              )}
+            </div>
           </div>
           <div className="ml-auto flex flex-col items-end gap-0.5">
             <span className="font-hud flex items-center gap-1 text-lg font-bold" style={{ color: "var(--progress)" }}>
@@ -103,7 +146,7 @@ export function Character() {
               <motion.button
                 key={option.id}
                 type="button"
-                onClick={() => handlePick(option)}
+                onClick={() => handlePickColor(option)}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
                 animate={shakeId === option.id ? { x: [0, -6, 6, -6, 6, 0] } : { x: 0 }}
@@ -135,6 +178,122 @@ export function Character() {
                 </div>
                 <span className="text-xs font-semibold text-[var(--ink)]">{option.label}</span>
                 {isUnlockable(option) && !owned && (
+                  <span
+                    className="font-hud flex items-center gap-0.5 text-[10px] font-bold"
+                    style={{ color: affordable ? "var(--progress)" : "var(--ink-faint)" }}
+                  >
+                    <Zap size={9} strokeWidth={2.5} />
+                    {option.cost}
+                  </span>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="font-display text-sm font-bold uppercase tracking-wide text-[var(--ink-dim)]">
+          Badge frame
+        </h2>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+          {allFrames.map((option) => {
+            const owned = option.id === "none" || profile.unlockedFrameIds.includes(option.id);
+            const equipped = (profile.frameId ?? "none") === option.id;
+            const affordable = profile.lifePoints >= option.cost;
+            const locked = !owned;
+
+            return (
+              <motion.button
+                key={option.id}
+                type="button"
+                onClick={() => handlePickFrame(option)}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                animate={shakeId === option.id ? { x: [0, -6, 6, -6, 6, 0] } : { x: 0 }}
+                transition={shakeId === option.id ? { duration: 0.4 } : undefined}
+                className="flex flex-col items-center gap-2 rounded-2xl border p-3 text-center"
+                style={{
+                  borderColor: equipped ? "var(--accent)" : "var(--hairline)",
+                  background: "var(--bg-panel-raised)",
+                  boxShadow: equipped ? "inset 0 0 0 1px var(--accent)" : undefined,
+                  cursor: locked && !affordable ? "not-allowed" : "pointer",
+                }}
+              >
+                <div
+                  className="relative flex h-12 w-12 items-center justify-center rounded-full"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
+                    boxShadow: option.ring || undefined,
+                    opacity: locked ? 0.45 : 1,
+                  }}
+                >
+                  {locked ? (
+                    <Lock size={16} color="#fff" strokeWidth={2.5} />
+                  ) : (
+                    <span className="font-display text-sm font-bold" style={{ color: "var(--accent-ink)" }}>
+                      {(profile.characterName || "?").trim().charAt(0).toUpperCase() || "?"}
+                    </span>
+                  )}
+                  {equipped && (
+                    <span
+                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full"
+                      style={{ background: "var(--accent)", color: "var(--accent-ink)" }}
+                    >
+                      <Check size={12} strokeWidth={3} />
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs font-semibold text-[var(--ink)]">{option.label}</span>
+                {option.cost > 0 && !owned && (
+                  <span
+                    className="font-hud flex items-center gap-0.5 text-[10px] font-bold"
+                    style={{ color: affordable ? "var(--progress)" : "var(--ink-faint)" }}
+                  >
+                    <Zap size={9} strokeWidth={2.5} />
+                    {option.cost}
+                  </span>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="font-display text-sm font-bold uppercase tracking-wide text-[var(--ink-dim)]">
+          Title
+        </h2>
+        <div className="flex flex-wrap gap-2.5">
+          {allTitles.map((option) => {
+            const owned = option.id === "none" || profile.unlockedTitleIds.includes(option.id);
+            const equipped = (profile.titleId ?? "none") === option.id;
+            const affordable = profile.lifePoints >= option.cost;
+            const locked = !owned;
+
+            return (
+              <motion.button
+                key={option.id}
+                type="button"
+                onClick={() => handlePickTitle(option)}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                animate={shakeId === option.id ? { x: [0, -6, 6, -6, 6, 0] } : { x: 0 }}
+                transition={shakeId === option.id ? { duration: 0.4 } : undefined}
+                className="flex items-center gap-2 rounded-full border px-4 py-2"
+                style={{
+                  borderColor: equipped ? "var(--accent)" : "var(--hairline)",
+                  background: equipped
+                    ? "color-mix(in srgb, var(--accent) 14%, transparent)"
+                    : "var(--bg-panel-raised)",
+                  opacity: locked ? 0.6 : 1,
+                  cursor: locked && !affordable ? "not-allowed" : "pointer",
+                }}
+              >
+                {locked && <Lock size={12} style={{ color: "var(--ink-faint)" }} strokeWidth={2.5} />}
+                {equipped && <Check size={12} style={{ color: "var(--accent)" }} strokeWidth={3} />}
+                <span className="text-xs font-semibold text-[var(--ink)]">{option.label}</span>
+                {option.cost > 0 && !owned && (
                   <span
                     className="font-hud flex items-center gap-0.5 text-[10px] font-bold"
                     style={{ color: affordable ? "var(--progress)" : "var(--ink-faint)" }}
