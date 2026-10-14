@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { GameProvider } from "./engine/GameContext";
 import { AccentTheme } from "./components/AccentTheme";
@@ -8,6 +9,11 @@ import { Game } from "./routes/Game";
 import { About } from "./routes/About";
 import { Character } from "./routes/Character";
 import { Debug } from "./routes/Debug";
+import { getTrafficSource } from "./engine/analytics";
+
+// Record where this visitor came from (utm_source / referrer) as early as
+// possible, before any in-app navigation drops the query string.
+getTrafficSource();
 
 function Shell() {
   // /debug is an internal data-review tool, not part of the game — keep it
@@ -43,6 +49,7 @@ function App() {
       <GameProvider>
         <Shell />
       </GameProvider>
+      <Analytics />
     </BrowserRouter>
   );
 }
