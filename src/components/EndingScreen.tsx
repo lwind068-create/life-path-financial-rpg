@@ -12,7 +12,9 @@ import {
 import { ShareCard } from "./ShareCard";
 import { StatBar } from "./StatBar";
 import { PlayerBadge } from "./PlayerBadge";
+import { getFrame } from "../content/characterOptions";
 import { Leaderboard } from "./Leaderboard";
+import { track } from "../engine/analytics";
 
 const SPARKLE_COLORS = ["var(--progress)", "var(--accent)", "var(--progress-glow)"];
 
@@ -71,6 +73,7 @@ export function EndingScreen() {
 
   const handleShare = async () => {
     if (!cardRef.current) return;
+    track("ending_shared");
     try {
       const dataUrl = await toPng(cardRef.current, { pixelRatio: 2 });
       const blob = await (await fetch(dataUrl)).blob();
@@ -79,7 +82,7 @@ export function EndingScreen() {
         await navigator.share({
           files: [file],
           title: "My Life-Path",
-          text: variant?.headline,
+          text: `${variant?.headline ?? "My Life-Path"} — play yours free at lifepathgame.org`,
         });
         return;
       }
@@ -108,7 +111,7 @@ export function EndingScreen() {
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          {profile.characterName && <PlayerBadge name={profile.characterName} size="md" />}
+          {profile.characterName && <PlayerBadge name={profile.characterName} size="md" frame={getFrame(profile.frameId)} />}
           <span
             className="font-display text-xs font-semibold uppercase tracking-widest"
             style={{ color: "var(--accent)" }}
@@ -156,7 +159,7 @@ export function EndingScreen() {
         </div>
       </div>
 
-      <Leaderboard playerName={profile.characterName} playerNetWorth={netWorth} />
+      <Leaderboard playerName={profile.characterName} playerNetWorth={netWorth} playerLifePoints={profile.totalLifePointsEarned} />
 
       <div className="flex flex-col gap-3">
         <button

@@ -8,6 +8,7 @@ import { OutcomeAnimation } from "./OutcomeAnimation";
 import { StatBar } from "./StatBar";
 import { StreakIndicator } from "./StreakIndicator";
 import { PlayerBadge } from "./PlayerBadge";
+import { getFrame } from "../content/characterOptions";
 import { ChapterIcon } from "./ChapterIcon";
 import { StockTicker } from "./StockTicker";
 import { MathChallenge } from "./MathChallenge";
@@ -110,7 +111,7 @@ export function ChapterScreen() {
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-5 py-10 sm:py-16">
       <div className="flex items-center gap-3">
-        {profile.characterName && <PlayerBadge name={profile.characterName} size="sm" />}
+        {profile.characterName && <PlayerBadge name={profile.characterName} size="sm" frame={getFrame(profile.frameId)} />}
         <StreakIndicator
           visitedCount={progress.visitedChapterIds.length}
           totalCount={totalChapterCount}

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Compass, Menu, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { PlayerBadge } from "./PlayerBadge";
+import { getFrame } from "../content/characterOptions";
 
 export function NavBar() {
   const [open, setOpen] = useState(false);
@@ -34,7 +35,7 @@ export function NavBar() {
         <div className="flex items-center gap-3">
           {profile.characterName && (
             <Link to="/character" aria-label="Upgrade character">
-              <PlayerBadge name={profile.characterName} size="sm" />
+              <PlayerBadge name={profile.characterName} size="sm" frame={getFrame(profile.frameId)} />
             </Link>
           )}
           <div className="relative">
