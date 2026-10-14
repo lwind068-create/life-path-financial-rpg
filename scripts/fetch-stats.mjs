@@ -83,6 +83,28 @@ async function main() {
       avgKnowledgeGain !== null ? avgKnowledgeGain.toFixed(2) : "n/a"
     } points`,
   );
+
+  // Per-channel breakdown — trafficSource is the first-touch utm_source or
+  // referring site saved by src/engine/analytics.ts. Players from before
+  // this field existed show up as "(unknown)".
+  const bySource = new Map();
+  for (const p of players) {
+    const key = p.trafficSource || "(unknown)";
+    const row = bySource.get(key) ?? { players: 0, completed: 0 };
+    row.players += 1;
+    if (p.completed === true) row.completed += 1;
+    bySource.set(key, row);
+  }
+  if (bySource.size > 0) {
+    console.log("");
+    console.log("--- Players by traffic source (first touch) ---");
+    console.log("source".padEnd(22) + "players".padStart(8) + "finished".padStart(10) + "rate".padStart(8));
+    for (const [source, row] of [...bySource.entries()].sort((a, b) => b[1].players - a[1].players)) {
+      const rate = row.players ? `${((row.completed / row.players) * 100).toFixed(0)}%` : "n/a";
+      console.log(source.padEnd(22) + String(row.players).padStart(8) + String(row.completed).padStart(10) + rate.padStart(8));
+    }
+  }
+
   console.log("");
   console.log(
     "These are the raw numbers behind any 'X players, average knowledge gain of Y' claim — keep this output alongside your application materials as the source data.",
