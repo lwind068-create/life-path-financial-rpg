@@ -100,3 +100,26 @@ This only sets up data collection — it doesn't put the game on the
 internet. Any static host works well with a Vite app (Vercel, Netlify,
 Firebase Hosting itself, GitHub Pages): `npm run build` produces a `dist/`
 folder to deploy. Ask if you'd like help with that next.
+
+## Leaderboard and analytics (added Oct 2026)
+
+**Publish the updated security rules** so the in-game leaderboard can show
+real players: Firebase console → Firestore Database → Rules → paste the
+contents of `firestore.rules` → Publish (or `firebase deploy --only
+firestore:rules`). Until then the board just shows your own row.
+
+**Vercel Web Analytics** (page views, visitors, referrers): Vercel dashboard
+→ this project → Analytics → Enable. The `<Analytics />` component is
+already in `src/App.tsx`.
+
+**Firebase / Google Analytics funnel events** (`start_clicked`,
+`chapter_completed`, `game_completed`, `ending_shared`): Firebase console →
+Project settings → Integrations → Google Analytics → Enable. Copy the web
+app's `measurementId` (starts with `G-`) into `.env.local` and into Vercel →
+Settings → Environment Variables as `VITE_FIREBASE_MEASUREMENT_ID`, then
+redeploy.
+
+**Traffic sources**: post links like
+`https://lifepathgame.org/?utm_source=tiktok&utm_campaign=pov_paycheck`.
+The first source a player arrives from is saved on their `players/` doc,
+and `npm run stats` prints players and completion rate per source.
