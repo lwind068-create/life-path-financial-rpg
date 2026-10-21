@@ -9,6 +9,7 @@ import { Game } from "./routes/Game";
 import { About } from "./routes/About";
 import { Character } from "./routes/Character";
 import { Shop } from "./routes/Shop";
+import { Arcade } from "./routes/Arcade";
 import { Notices } from "./components/Notices";
 import { Debug } from "./routes/Debug";
 import { getTrafficSource } from "./engine/analytics";
@@ -41,6 +42,7 @@ function Shell() {
         <Route path="/play" element={<Game />} />
         <Route path="/character" element={<Character />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/arcade" element={<Arcade />} />
         <Route path="/about" element={<About />} />
       </Routes>
     </AccentTheme>
