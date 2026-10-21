@@ -88,7 +88,7 @@ export const STREAK_MILESTONES: { days: number; reward: number }[] = [
 
 // ---------- quests ----------
 
-export type QuestMetric = "choices" | "smartChoices" | "chapters" | "boostUsed" | "vaultDeposit";
+export type QuestMetric = "choices" | "smartChoices" | "chapters" | "boostUsed" | "vaultDeposit" | "arcade";
 
 export interface QuestDef {
   id: string;
@@ -106,6 +106,8 @@ export const QUEST_POOL: QuestDef[] = [
   { id: "chapter1", label: "Finish a chapter", metric: "chapters", target: 1, reward: 40 },
   { id: "boost1", label: "Use a boost", metric: "boostUsed", target: 1, reward: 20 },
   { id: "vault1", label: "Put points in the Savings Vault", metric: "vaultDeposit", target: 1, reward: 20 },
+  { id: "arcade1", label: "Play an Arcade game", metric: "arcade", target: 1, reward: 20 },
+  { id: "arcade3", label: "Play 3 Arcade games", metric: "arcade", target: 3, reward: 45 },
 ];
 
 /** Bonus for finishing all three of today's quests. */
@@ -172,6 +174,10 @@ export interface BoostState {
   allQuestsBonusClaimed: boolean;
   /** Life Points parked in the Savings Vault (not spendable until withdrawn). */
   vault: number;
+  /** Day (YYYY-MM-DD) the free daily Arcade ticket was used; null if never. */
+  freeTicketDay: string | null;
+  /** Best score per Arcade game id. */
+  arcadeBest: Record<string, number>;
 }
 
 export function freshBoostState(): BoostState {
@@ -186,6 +192,8 @@ export function freshBoostState(): BoostState {
     questRefreshes: 0,
     allQuestsBonusClaimed: false,
     vault: 0,
+    freeTicketDay: null,
+    arcadeBest: {},
   };
 }
 

@@ -23,6 +23,7 @@ import { computeLifePoints } from "./lifePoints";
 import {
   addQuestProgress,
   applyBoostToPoints,
+  dayKey,
   buyBoost,
   depositToVault,
   ensureToday,
@@ -33,6 +34,7 @@ import {
   type BoostState,
   type BuyError,
 } from "./boosts";
+import { getArcadeGame, type ArcadeGameId } from "./arcade";
 import { ACCENT_OPTIONS, UNLOCKABLE_ACCENTS, UNLOCKABLE_TITLES, UNLOCKABLE_FRAMES } from "../content/characterOptions";
 
 const PROFILE_KEY = "lifepath:profile";
@@ -178,6 +180,12 @@ interface GameContextValue {
   vaultDeposit: (amount: number) => void;
   /** Moves everything in the Savings Vault back to spendable Life Points. */
   vaultWithdraw: () => void;
+  /** True if today's free Arcade ticket hasn't been used yet. */
+  hasFreeTicket: boolean;
+  /** Pays for one Arcade play (free ticket first, then Life Points). Returns false if the player can't afford it. */
+  startArcadeGame: (id: ArcadeGameId) => boolean;
+  /** Pays out an Arcade reward and records the score. */
+  finishArcadeGame: (id: ArcadeGameId, score: number, reward: number) => void;
   totalChapterCount: number;
   setCharacterName: (name: string) => void;
   setAccentId: (id: string) => void;
@@ -447,6 +455,44 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [commitProfile, pushNotices],
   );
 
+  const hasFreeTicket = profile.boosts.freeTicketDay !== dayKey();
+
+  const startArcadeGame = useCallback(
+    (id: ArcadeGameId) => {
+      const game = getArcadeGame(id);
+      const cur = profileRef.current;
+      if (!game) return false;
+      const today = dayKey();
+      if (cur.boosts.freeTicketDay !== today) {
+        commitProfile({ ...cur, boosts: { ...cur.boosts, freeTicketDay: today } });
+        pushNotices(["Free daily Arcade play used 🎟️"]);
+        return true;
+      }
+      if (cur.lifePoints < game.cost) return false;
+      commitProfile({ ...cur, lifePoints: cur.lifePoints - game.cost });
+      return true;
+    },
+    [commitProfile, pushNotices],
+  );
+
+  const finishArcadeGame = useCallback(
+    (id: ArcadeGameId, score: number, reward: number) => {
+      const cur = profileRef.current;
+      const quest = addQuestProgress(cur.boosts, "arcade");
+      const best = Math.max(cur.boosts.arcadeBest[id] ?? 0, score);
+      const isNewBest = score > (cur.boosts.arcadeBest[id] ?? 0);
+      const earned = Math.max(0, Math.round(reward)) + quest.earned;
+      commitProfile({
+        ...cur,
+        boosts: { ...quest.state, arcadeBest: { ...quest.state.arcadeBest, [id]: best } },
+        lifePoints: cur.lifePoints + earned,
+        totalLifePointsEarned: cur.totalLifePointsEarned + earned,
+      });
+      pushNotices([...(isNewBest && score > 0 ? ["New personal best! 🏆"] : []), ...quest.notices]);
+    },
+    [commitProfile, pushNotices],
+  );
+
   const vaultWithdraw = useCallback(() => {
     const cur = profileRef.current;
     const result = withdrawFromVault(cur.boosts);
@@ -589,6 +635,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyBoostItem,
       vaultDeposit,
       vaultWithdraw,
+      hasFreeTicket,
+      startArcadeGame,
+      finishArcadeGame,
     }),
     [
       currentChapter,
@@ -615,6 +664,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyBoostItem,
       vaultDeposit,
       vaultWithdraw,
+      hasFreeTicket,
+      startArcadeGame,
+      finishArcadeGame,
     ],
   );
 
