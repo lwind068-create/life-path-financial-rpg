@@ -8,6 +8,8 @@ import { Home } from "./routes/Home";
 import { Game } from "./routes/Game";
 import { About } from "./routes/About";
 import { Character } from "./routes/Character";
+import { Shop } from "./routes/Shop";
+import { Notices } from "./components/Notices";
 import { Debug } from "./routes/Debug";
 import { getTrafficSource } from "./engine/analytics";
 
@@ -33,10 +35,12 @@ function Shell() {
     <AccentTheme>
       <BackgroundFX />
       <NavBar />
+      <Notices />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/play" element={<Game />} />
         <Route path="/character" element={<Character />} />
+        <Route path="/shop" element={<Shop />} />
         <Route path="/about" element={<About />} />
       </Routes>
     </AccentTheme>
