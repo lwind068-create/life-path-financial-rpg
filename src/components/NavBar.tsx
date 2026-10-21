@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Compass, Menu, RotateCcw, ShoppingBag, Sparkles, Trash2, Zap } from "lucide-react";
+import { Compass, Gamepad2, Menu, RotateCcw, ShoppingBag, Sparkles, Trash2, Zap } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { PlayerBadge } from "./PlayerBadge";
 import { getFrame } from "../content/characterOptions";
@@ -93,6 +93,16 @@ export function NavBar() {
                     >
                       {hasStory ? "Continue story" : "Play"}
                     </Link>
+                    {hasStory && (
+                      <Link
+                        to="/arcade"
+                        onClick={close}
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-[var(--ink)] transition-colors hover:bg-white/5"
+                      >
+                        <Gamepad2 size={14} strokeWidth={2} style={{ color: "var(--accent)" }} />
+                        Arcade
+                      </Link>
+                    )}
                     {hasStory && (
                       <Link
                         to="/shop"
