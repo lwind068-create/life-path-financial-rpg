@@ -82,6 +82,19 @@ export function Home() {
       )}
 
       {hasCharacter && <DailyCard />}
+      {hasCharacter && (
+        <Link
+          to="/arcade"
+          className="flex w-full items-center justify-between gap-3 rounded-2xl border px-5 py-4 text-left transition-colors hover:bg-white/5"
+          style={{ borderColor: "var(--hairline)", background: "var(--bg-panel-raised)" }}
+        >
+          <span className="flex items-center gap-2 text-base font-bold text-[var(--ink)]">
+            <Gamepad2 size={18} strokeWidth={2.25} style={{ color: "var(--accent)" }} />
+            Arcade
+          </span>
+          <span className="text-xs font-semibold text-[var(--ink-dim)]">Portfolio Sim · Need or Want? · Which Costs More? →</span>
+        </Link>
+      )}
 
       <motion.button
         type="button"

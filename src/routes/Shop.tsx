@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Flame, Landmark, Rocket, Shield, Shuffle, Sparkles, Target, Zap } from "lucide-react";
+import { ArrowLeft, Check, Flame, Gamepad2, Landmark, Rocket, Shield, Shuffle, Sparkles, Target, Zap } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import {
   ALL_QUESTS_BONUS,
@@ -269,6 +269,15 @@ export function Shop() {
           ))}
         </div>
       </Panel>
+
+      <Link
+        to="/arcade"
+        className="flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold text-[var(--ink)] transition-colors hover:bg-white/5"
+        style={{ borderColor: "var(--hairline)" }}
+      >
+        <Gamepad2 size={15} strokeWidth={2} style={{ color: "var(--accent)" }} />
+        Play the Arcade →
+      </Link>
 
       <Link
         to="/character"
