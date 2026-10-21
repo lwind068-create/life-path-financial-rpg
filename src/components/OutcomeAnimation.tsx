@@ -16,6 +16,8 @@ interface OutcomeAnimationProps {
   outcomeTickers?: TickerConfig[];
   /** Life Points earned for this choice (see engine/lifePoints.ts). */
   pointsAwarded: number;
+  /** Active boost multiplier applied to pointsAwarded (1 = no boost). */
+  multiplier?: number;
   onContinue: () => void;
 }
 
@@ -26,6 +28,7 @@ export function OutcomeAnimation({
   randomEvent,
   outcomeTickers,
   pointsAwarded,
+  multiplier = 1,
   onContinue,
 }: OutcomeAnimationProps) {
   // Component remounts fresh on every new outcome (see ChapterScreen's
@@ -72,6 +75,11 @@ export function OutcomeAnimation({
         >
           <Zap size={12} strokeWidth={2.5} fill="var(--progress-glow)" />+
           {pointsAwarded}
+          {multiplier > 1 && (
+            <span className="ml-1 rounded-full px-1.5 text-[10px]" style={{ background: "var(--progress)", color: "var(--progress-ink)" }}>
+              {multiplier}×
+            </span>
+          )}
         </motion.span>
       </div>
 

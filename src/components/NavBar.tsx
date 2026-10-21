@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Compass, Menu, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import { Compass, Menu, RotateCcw, ShoppingBag, Sparkles, Trash2, Zap } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { PlayerBadge } from "./PlayerBadge";
 import { getFrame } from "../content/characterOptions";
@@ -33,6 +33,17 @@ export function NavBar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          {profile.characterName && (
+            <Link
+              to="/shop"
+              aria-label="Shop and quests"
+              className="font-hud flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition-opacity hover:opacity-80"
+              style={{ background: "color-mix(in srgb, var(--progress) 16%, transparent)", color: "var(--progress-glow)" }}
+            >
+              <Zap size={12} strokeWidth={2.5} fill="var(--progress-glow)" />
+              {profile.lifePoints}
+            </Link>
+          )}
           {profile.characterName && (
             <Link to="/character" aria-label="Upgrade character">
               <PlayerBadge name={profile.characterName} size="sm" frame={getFrame(profile.frameId)} />
@@ -82,6 +93,16 @@ export function NavBar() {
                     >
                       {hasStory ? "Continue story" : "Play"}
                     </Link>
+                    {hasStory && (
+                      <Link
+                        to="/shop"
+                        onClick={close}
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-[var(--ink)] transition-colors hover:bg-white/5"
+                      >
+                        <ShoppingBag size={14} strokeWidth={2} style={{ color: "var(--progress)" }} />
+                        Shop &amp; quests
+                      </Link>
+                    )}
                     {hasStory && (
                       <Link
                         to="/character"

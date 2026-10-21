@@ -179,6 +179,7 @@ export function ChapterScreen() {
               randomEvent={activeRandomEvent}
               outcomeTickers={currentQuestion?.outcomeTickers}
               pointsAwarded={lastOutcome.pointsAwarded}
+              multiplier={lastOutcome.multiplier}
               onContinue={acknowledgeOutcome}
             />
           )}
