@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -19,6 +20,19 @@ import { logPlayerSummary } from "./logPlayerSummary";
 import { publishLeaderboardEntry } from "./leaderboard";
 import { track } from "./analytics";
 import { computeLifePoints } from "./lifePoints";
+import {
+  addQuestProgress,
+  applyBoostToPoints,
+  buyBoost,
+  depositToVault,
+  ensureToday,
+  freshBoostState,
+  registerActivity,
+  withdrawFromVault,
+  type BoostId,
+  type BoostState,
+  type BuyError,
+} from "./boosts";
 import { ACCENT_OPTIONS, UNLOCKABLE_ACCENTS, UNLOCKABLE_TITLES, UNLOCKABLE_FRAMES } from "../content/characterOptions";
 
 const PROFILE_KEY = "lifepath:profile";
@@ -57,6 +71,8 @@ interface PlayerProfile {
   frameId: string | null;
   /** Ids of UNLOCKABLE_FRAMES the player has purchased. */
   unlockedFrameIds: string[];
+  /** Daily streak, daily quests, active boost, freezes, and the Savings Vault — see engine/boosts.ts. */
+  boosts: BoostState;
 }
 
 /** The single, whole-story save slot. */
@@ -88,6 +104,7 @@ function freshProfile(): PlayerProfile {
     unlockedTitleIds: [],
     frameId: null,
     unlockedFrameIds: [],
+    boosts: freshBoostState(),
   };
 }
 
@@ -104,7 +121,9 @@ function loadProfile(): PlayerProfile {
   try {
     const raw = window.localStorage.getItem(PROFILE_KEY);
     if (!raw) return freshProfile();
-    return { ...freshProfile(), ...(JSON.parse(raw) as Partial<PlayerProfile>) };
+    const parsed = JSON.parse(raw) as Partial<PlayerProfile>;
+    // Older saves predate boosts — merge field by field so they get defaults.
+    return { ...freshProfile(), ...parsed, boosts: { ...freshBoostState(), ...(parsed.boosts ?? {}) } };
   } catch {
     return freshProfile();
   }
@@ -149,7 +168,16 @@ interface GameContextValue {
   /** Set on the most recent choice, if its random event fired; cleared on advance. */
   activeRandomEvent: RandomEvent | null;
   /** Set right after a choice is made, so the outcome screen can render it before advancing. */
-  lastOutcome: { choice: OutcomeChoice; statsBefore: PlayerStats; pointsAwarded: number } | null;
+  lastOutcome: { choice: OutcomeChoice; statsBefore: PlayerStats; pointsAwarded: number; multiplier: number } | null;
+  /** Short toasts (quest done, streak, vault interest). Each auto-clears after a few seconds. */
+  notices: { id: number; text: string }[];
+  dismissNotice: (id: number) => void;
+  /** Spends Life Points on a boost. Returns null on success, or why it couldn't. */
+  buyBoostItem: (id: BoostId) => BuyError | null;
+  /** Moves up to `amount` spendable Life Points into the Savings Vault. */
+  vaultDeposit: (amount: number) => void;
+  /** Moves everything in the Savings Vault back to spendable Life Points. */
+  vaultWithdraw: () => void;
   totalChapterCount: number;
   setCharacterName: (name: string) => void;
   setAccentId: (id: string) => void;
@@ -184,7 +212,48 @@ export function GameProvider({ children }: { children: ReactNode }) {
     choice: OutcomeChoice;
     statsBefore: PlayerStats;
     pointsAwarded: number;
+    multiplier: number;
   } | null>(null);
+  const [notices, setNotices] = useState<{ id: number; text: string }[]>([]);
+  const noticeId = useRef(0);
+
+  // Latest profile for event handlers that compute the next profile directly
+  // (rather than via a setState updater) so notices fire exactly once.
+  const profileRef = useRef(profile);
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  const pushNotices = useCallback((texts: string[]) => {
+    if (texts.length === 0) return;
+    const added = texts.map((text) => ({ id: ++noticeId.current, text }));
+    setNotices((n) => [...n, ...added].slice(-4));
+    for (const { id } of added) {
+      window.setTimeout(() => setNotices((n) => n.filter((x) => x.id !== id)), 3800);
+    }
+  }, []);
+
+  const dismissNotice = useCallback((id: number) => {
+    setNotices((n) => n.filter((x) => x.id !== id));
+  }, []);
+
+  const commitProfile = useCallback((next: PlayerProfile) => {
+    profileRef.current = next;
+    setProfile(next);
+  }, []);
+
+  // Make sure today's quests exist on load and whenever the tab comes back
+  // into focus (e.g. left open overnight).
+  useEffect(() => {
+    const refresh = () => {
+      const cur = profileRef.current;
+      const boosts = ensureToday(cur.boosts);
+      if (boosts !== cur.boosts) commitProfile({ ...cur, boosts });
+    };
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [commitProfile]);
 
   useEffect(() => {
     window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
@@ -255,6 +324,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const goToChapter = useCallback((chapterId: string) => {
     const target = lifePathArc.chapters[chapterId];
+    // Moving off a chapter = finishing it (counts toward the "finish a chapter" quest).
+    const cur = profileRef.current;
+    const quest = addQuestProgress(cur.boosts, "chapters");
+    commitProfile({
+      ...cur,
+      boosts: quest.state,
+      lifePoints: cur.lifePoints + quest.earned,
+      totalLifePointsEarned: cur.totalLifePointsEarned + quest.earned,
+    });
+    pushNotices(quest.notices);
     setProgress((p) => ({
       ...p,
       currentChapterId: chapterId,
@@ -264,7 +343,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         ? p.visitedChapterIds
         : [...p.visitedChapterIds, chapterId],
     }));
-  }, []);
+  }, [commitProfile, pushNotices]);
 
   const continueFromNarrative = useCallback(() => {
     const next = currentChapter.nextChapterId;
@@ -297,28 +376,84 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const statsAfter = addEffects(addEffects(statsBefore, choice.statEffects), firedEvent?.statEffects);
 
       const isMeasurementChapter = Boolean(currentChapter.isBaselineChoice || currentChapter.isMirrorChoice);
-      const pointsAwarded = computeLifePoints(choice.financialQualityScore, isMeasurementChapter);
+      const basePoints = computeLifePoints(choice.financialQualityScore, isMeasurementChapter);
+
+      // Boost layer (engine/boosts.ts): daily streak + vault interest, then the
+      // active multiplier, then quest progress. The multiplier is the same for
+      // every option, so it never changes which choice is "worth" more.
+      const cur = profileRef.current;
+      const activity = registerActivity(cur.boosts);
+      const boosted = applyBoostToPoints(activity.state, basePoints);
+      const choiceQuest = addQuestProgress(boosted.state, "choices");
+      const isSmart = !isMeasurementChapter && choice.financialQualityScore >= 4;
+      const smartQuest = isSmart ? addQuestProgress(choiceQuest.state, "smartChoices") : { ...choiceQuest, earned: 0, notices: [] };
+      const pointsAwarded = boosted.points;
+      const bonus = activity.earned + choiceQuest.earned + smartQuest.earned;
+      const lifetimeOnly = activity.lifetimeOnly ?? 0;
 
       setActiveRandomEvent(firedEvent);
-      setLastOutcome({ choice, statsBefore, pointsAwarded });
+      setLastOutcome({ choice, statsBefore, pointsAwarded, multiplier: boosted.multiplier });
       setProgress((p) => ({
         ...p,
         stats: statsAfter,
         statsHistory: [...p.statsHistory, statsAfter],
         streak: p.streak + 1,
       }));
-      setProfile((prof) => ({
-        ...prof,
+      commitProfile({
+        ...cur,
+        boosts: smartQuest.state,
         cumulativeStats: addEffects(
-          addEffects(prof.cumulativeStats, choice.statEffects),
+          addEffects(cur.cumulativeStats, choice.statEffects),
           firedEvent?.statEffects,
         ),
-        lifePoints: prof.lifePoints + pointsAwarded,
-        totalLifePointsEarned: prof.totalLifePointsEarned + pointsAwarded,
-      }));
+        lifePoints: cur.lifePoints + pointsAwarded + bonus,
+        totalLifePointsEarned: cur.totalLifePointsEarned + pointsAwarded + bonus + lifetimeOnly,
+      });
+      pushNotices([...activity.notices, ...choiceQuest.notices, ...smartQuest.notices]);
     },
-    [currentChapter, currentQuestion, progress.stats],
+    [currentChapter, currentQuestion, progress.stats, commitProfile, pushNotices],
   );
+
+  const buyBoostItem = useCallback(
+    (id: BoostId): BuyError | null => {
+      const cur = profileRef.current;
+      const result = buyBoost(cur.boosts, id, cur.lifePoints);
+      if (!result.ok) return result.error;
+      commitProfile({
+        ...cur,
+        boosts: result.state,
+        lifePoints: cur.lifePoints - result.cost + result.earned,
+        totalLifePointsEarned: cur.totalLifePointsEarned + result.earned,
+      });
+      pushNotices(result.notices);
+      return null;
+    },
+    [commitProfile, pushNotices],
+  );
+
+  const vaultDeposit = useCallback(
+    (amount: number) => {
+      const cur = profileRef.current;
+      const result = depositToVault(cur.boosts, amount, cur.lifePoints);
+      if (result.moved === 0) return;
+      commitProfile({
+        ...cur,
+        boosts: result.state,
+        lifePoints: cur.lifePoints - result.moved + result.earned,
+        totalLifePointsEarned: cur.totalLifePointsEarned + result.earned,
+      });
+      pushNotices([`Moved ${result.moved} into the Savings Vault`, ...result.notices]);
+    },
+    [commitProfile, pushNotices],
+  );
+
+  const vaultWithdraw = useCallback(() => {
+    const cur = profileRef.current;
+    const result = withdrawFromVault(cur.boosts);
+    if (result.moved === 0) return;
+    commitProfile({ ...cur, boosts: result.state, lifePoints: cur.lifePoints + result.moved });
+    pushNotices([`Withdrew ${result.moved} from the Savings Vault`]);
+  }, [commitProfile, pushNotices]);
 
   const unlockAccent = useCallback(
     (id: string) => {
@@ -449,6 +584,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       unlockAccent,
       unlockTitle,
       unlockFrame,
+      notices,
+      dismissNotice,
+      buyBoostItem,
+      vaultDeposit,
+      vaultWithdraw,
     }),
     [
       currentChapter,
@@ -470,6 +610,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       unlockAccent,
       unlockTitle,
       unlockFrame,
+      notices,
+      dismissNotice,
+      buyBoostItem,
+      vaultDeposit,
+      vaultWithdraw,
     ],
   );
 
