@@ -8,6 +8,7 @@ import { getFrame } from "../content/characterOptions";
 import { ChapterPath } from "../components/ChapterPath";
 import { Leaderboard } from "../components/Leaderboard";
 import { track } from "../engine/analytics";
+import { DailyCard } from "../components/DailyCard";
 
 const FEATURES = [
   { Icon: Gamepad2, title: "One continuous story", body: "Chapters flow into each other, real choices throughout." },
@@ -79,6 +80,8 @@ export function Home() {
           </Link>
         </motion.div>
       )}
+
+      {hasCharacter && <DailyCard />}
 
       <motion.button
         type="button"
