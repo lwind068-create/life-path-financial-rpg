@@ -16,7 +16,7 @@ import {
   clearDecisionLog,
 } from "./logDecision";
 import { computeAverageQualityScore, computeKnowledgeGain } from "./scoring";
-import { logPlayerSummary } from "./logPlayerSummary";
+import { logEngagement, logPlayerSummary } from "./logPlayerSummary";
 import { publishLeaderboardEntry } from "./leaderboard";
 import { track } from "./analytics";
 import { computeLifePoints } from "./lifePoints";
@@ -28,6 +28,7 @@ import {
   depositToVault,
   ensureToday,
   freshBoostState,
+  freshTotals,
   registerActivity,
   withdrawFromVault,
   type BoostId,
@@ -322,7 +323,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // seconds after it changes, so it survives a new device or cleared data.
   useEffect(() => {
     if (!profile.username) return;
-    const t = window.setTimeout(() => void saveToCloud(), 4000);
+    const t = window.setTimeout(() => void saveToCloud(), 20000);
     return () => window.clearTimeout(t);
   }, [profile, progress]);
 
@@ -336,9 +337,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
         netWorth: profile.cumulativeStats.savings - profile.cumulativeStats.debt,
         lifePoints: profile.totalLifePointsEarned,
       });
-    }, 1500);
+    }, 5000);
     return () => window.clearTimeout(t);
   }, [profile.username, profile.totalLifePointsEarned, profile.cumulativeStats.savings, profile.cumulativeStats.debt]);
+
+  // Engagement numbers for the stats dashboard (players/{uid}): Life Points,
+  // streaks, quests, boosts, Arcade, vault. Debounced to keep writes low.
+  useEffect(() => {
+    if (!profile.username) return;
+    const b = profile.boosts;
+    const t = window.setTimeout(() => {
+      void logEngagement({
+        arcId: lifePathArc.id,
+        username: profile.username,
+        lifePoints: profile.lifePoints,
+        totalLifePointsEarned: profile.totalLifePointsEarned,
+        dailyStreak: b.dailyStreak,
+        bestStreak: b.bestStreak,
+        vault: b.vault,
+        arcadeBest: b.arcadeBest,
+        totals: { ...freshTotals(), ...b.totals },
+      });
+    }, 15000);
+    return () => window.clearTimeout(t);
+  }, [profile.username, profile.lifePoints, profile.totalLifePointsEarned, profile.boosts]);
 
   const currentChapter = lifePathArc.chapters[progress.currentChapterId] ?? lifePathArc.chapters[lifePathArc.startChapterId];
   const currentQuestion = currentChapter.questions?.[progress.currentQuestionIndex] ?? null;
@@ -512,6 +534,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     (id: ArcadeGameId, score: number, reward: number) => {
       const cur = profileRef.current;
       const quest = addQuestProgress(cur.boosts, "arcade");
+      const t = { ...freshTotals(), ...quest.state.totals };
+      quest.state = {
+        ...quest.state,
+        totals: {
+          ...t,
+          arcadePlays: t.arcadePlays + 1,
+          arcadePlaysByGame: { ...t.arcadePlaysByGame, [id]: (t.arcadePlaysByGame[id] ?? 0) + 1 },
+        },
+      };
       const best = Math.max(cur.boosts.arcadeBest[id] ?? 0, score);
       const isNewBest = score > (cur.boosts.arcadeBest[id] ?? 0);
       const earned = Math.max(0, Math.round(reward)) + quest.earned;

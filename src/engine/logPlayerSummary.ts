@@ -59,3 +59,54 @@ export async function logPlayerSummary(input: PlayerSummaryInput): Promise<void>
     // Best-effort only — see header comment.
   }
 }
+
+export interface EngagementInput {
+  arcId: string;
+  username: string;
+  lifePoints: number;
+  totalLifePointsEarned: number;
+  dailyStreak: number;
+  bestStreak: number;
+  vault: number;
+  arcadeBest: Record<string, number>;
+  totals: {
+    daysPlayed: number;
+    questsCompleted: number;
+    boostsBought: number;
+    arcadePlays: number;
+    arcadePlaysByGame: Record<string, number>;
+  };
+}
+
+/** Merges engagement numbers (points, streaks, quests, boosts, Arcade) into players/{uid}. Best-effort. */
+export async function logEngagement(input: EngagementInput): Promise<void> {
+  if (!remoteLoggingEnabled || !db) return;
+  try {
+    const uid = await getUid();
+    if (!uid) return;
+    await setDoc(
+      doc(db, "players", uid),
+      {
+        uid,
+        sessionId: getSessionId(),
+        arcId: input.arcId,
+        username: input.username,
+        lifePoints: input.lifePoints,
+        totalLifePointsEarned: input.totalLifePointsEarned,
+        dailyStreak: input.dailyStreak,
+        bestStreak: input.bestStreak,
+        vault: input.vault,
+        arcadeBest: input.arcadeBest,
+        daysPlayed: input.totals.daysPlayed,
+        questsCompleted: input.totals.questsCompleted,
+        boostsBought: input.totals.boostsBought,
+        arcadePlays: input.totals.arcadePlays,
+        arcadePlaysByGame: input.totals.arcadePlaysByGame,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+  } catch {
+    // Best-effort only.
+  }
+}

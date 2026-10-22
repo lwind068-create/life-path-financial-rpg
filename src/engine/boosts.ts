@@ -178,6 +178,21 @@ export interface BoostState {
   freeTicketDay: string | null;
   /** Best score per Arcade game id. */
   arcadeBest: Record<string, number>;
+  /** Lifetime engagement counters (for the stats dashboard). */
+  totals: EngagementTotals;
+}
+
+export interface EngagementTotals {
+  daysPlayed: number;
+  questsCompleted: number;
+  boostsBought: number;
+  arcadePlays: number;
+  /** Arcade plays per game id. */
+  arcadePlaysByGame: Record<string, number>;
+}
+
+export function freshTotals(): EngagementTotals {
+  return { daysPlayed: 0, questsCompleted: 0, boostsBought: 0, arcadePlays: 0, arcadePlaysByGame: {} };
 }
 
 export function freshBoostState(): BoostState {
@@ -194,6 +209,7 @@ export function freshBoostState(): BoostState {
     vault: 0,
     freeTicketDay: null,
     arcadeBest: {},
+    totals: freshTotals(),
   };
 }
 
@@ -236,13 +252,19 @@ export function addQuestProgress(state: BoostState, metric: QuestMetric, amount 
     }
     return { ...q, progress, done };
   });
+  const newlyDone = quests.filter((q, i) => q.done && !s.quests[i]?.done).length;
   let allQuestsBonusClaimed = s.allQuestsBonusClaimed;
   if (!allQuestsBonusClaimed && quests.length > 0 && quests.every((q) => q.done)) {
     allQuestsBonusClaimed = true;
     earned += ALL_QUESTS_BONUS;
     notices.push(`All daily quests done! Bonus +${ALL_QUESTS_BONUS}`);
   }
-  return { state: { ...s, quests, allQuestsBonusClaimed }, earned, notices };
+  const totals = { ...freshTotals(), ...s.totals };
+  return {
+    state: { ...s, quests, allQuestsBonusClaimed, totals: { ...totals, questsCompleted: totals.questsCompleted + newlyDone } },
+    earned,
+    notices,
+  };
 }
 
 /**
@@ -292,8 +314,17 @@ export function registerActivity(state: BoostState, today: string = dayKey()): B
     notices.push(`Savings Vault earned +${interest} interest`);
   }
 
+  const totals = { ...freshTotals(), ...s.totals };
   return {
-    state: { ...s, dailyStreak, bestStreak: Math.max(s.bestStreak, dailyStreak), lastActiveDay: today, streakFreezes, vault },
+    state: {
+      ...s,
+      dailyStreak,
+      bestStreak: Math.max(s.bestStreak, dailyStreak),
+      lastActiveDay: today,
+      streakFreezes,
+      vault,
+      totals: { ...totals, daysPlayed: totals.daysPlayed + 1 },
+    },
     earned,
     lifetimeOnly: interest,
     notices,
@@ -342,6 +373,8 @@ export function buyBoost(
     s = { ...s, quests: fillQuests(s.questDay ?? dayKey(), refreshes, kept, swappedOut), questRefreshes: refreshes };
   }
 
+  const t = { ...freshTotals(), ...s.totals };
+  s = { ...s, totals: { ...t, boostsBought: t.boostsBought + 1 } };
   const usedBoost = addQuestProgress(s, "boostUsed");
   return { ok: true, state: usedBoost.state, cost: def.cost, earned: usedBoost.earned, notices: usedBoost.notices };
 }
