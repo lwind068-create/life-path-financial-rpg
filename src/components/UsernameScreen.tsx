@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AtSign, Check, Compass, Loader2, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useGame } from "../engine/GameContext";
+import { LoginForm } from "./LoginForm";
 import {
   USERNAME_MAX,
   claimUsername,
@@ -17,6 +19,7 @@ export function UsernameScreen() {
   const [status, setStatus] = useState<"idle" | "checking" | "free" | "taken">("idle");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   // If this browser already owns a username (e.g. site data was cleared), restore it.
   useEffect(() => {
@@ -101,9 +104,20 @@ export function UsernameScreen() {
           Claim username
         </button>
         <p className="text-center text-[11px] leading-relaxed text-[var(--ink-faint)]">
-          Don't use your real full name. Your username is saved to this browser.
+          Don't use your real name. By playing you agree to how we use game data — see our{" "}
+          <Link to="/privacy" className="underline">privacy note</Link>.
         </p>
       </form>
+
+      <div className="flex flex-col gap-3 rounded-3xl border p-5" style={{ borderColor: "var(--hairline)", background: "var(--bg-panel-solid)" }}>
+        {!showLogin ? (
+          <button type="button" onClick={() => setShowLogin(true)} className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
+            Already saved your account with an email? Log in
+          </button>
+        ) : (
+          <LoginForm />
+        )}
+      </div>
     </div>
   );
 }

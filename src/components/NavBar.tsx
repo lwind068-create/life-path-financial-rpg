@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Compass, Gamepad2, Menu, RotateCcw, ShoppingBag, Sparkles, Trash2, Trophy, Zap } from "lucide-react";
+import { Compass, Gamepad2, LogOut, Menu, RotateCcw, ShoppingBag, Sparkles, Trash2, Trophy, UserRound, Zap } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { PlayerBadge } from "./PlayerBadge";
 import { getFrame } from "../content/characterOptions";
@@ -133,6 +133,23 @@ export function NavBar() {
                         Upgrade character
                       </Link>
                     )}
+                    {hasStory && (
+                      <Link
+                        to="/account"
+                        onClick={close}
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-[var(--ink)] transition-colors hover:bg-white/5"
+                      >
+                        <UserRound size={14} strokeWidth={2} style={{ color: "var(--accent)" }} />
+                        Account &amp; save
+                      </Link>
+                    )}
+                    <Link
+                      to="/privacy"
+                      onClick={close}
+                      className="px-4 py-3 text-sm text-[var(--ink)] transition-colors hover:bg-white/5"
+                    >
+                      Privacy
+                    </Link>
                     <Link
                       to="/about"
                       onClick={close}
@@ -154,6 +171,17 @@ export function NavBar() {
                         <RotateCcw size={14} strokeWidth={2} />
                         Restart the story
                       </button>
+                    )}
+                    {hasStory && (
+                      <Link
+                        to="/account#signout"
+                        onClick={close}
+                        className="flex items-center gap-2 border-t px-4 py-3 text-left text-sm text-[var(--ink)] transition-colors hover:bg-white/5"
+                        style={{ borderColor: "var(--hairline)" }}
+                      >
+                        <LogOut size={14} strokeWidth={2} />
+                        Sign out
+                      </Link>
                     )}
                     {hasStory && (
                       <button
