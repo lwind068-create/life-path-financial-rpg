@@ -6,8 +6,6 @@ import { Sparkles, RotateCcw } from "lucide-react";
 import { useGame, useDecisionLog } from "../engine/GameContext";
 import {
   computeAverageQualityScore,
-  computeKnowledgeGain,
-  computeSocialProofPercentile,
 } from "../engine/scoring";
 import { ShareCard } from "./ShareCard";
 import { StatBar } from "./StatBar";
@@ -40,16 +38,21 @@ export function EndingScreen() {
     );
   }, [variants, avgScore]);
 
-  // Silent — never rendered. The story has two baseline/mirror pairs now
-  // (job_offer/promotion_offer and funding_choice/growth_offer); average
-  // both gains for one overall signal. See engine/scoring.ts for the
-  // ethical framing and routes/Debug.tsx to inspect the raw data.
-  const gainResults = useMemo(() => computeKnowledgeGain(decisionLog, arc), [decisionLog, arc]);
-  const validGains = gainResults.map((r) => r.gain).filter((g): g is number => g !== null);
-  const avgGain = validGains.length ? validGains.reduce((a, b) => a + b, 0) / validGains.length : null;
-  const percentile = computeSocialProofPercentile(avgGain);
-
-  const socialProofLine = `You made stronger long-term calls than ${percentile}% of players.`;
+  // Real numbers only — no invented comparison to other players. The two
+  // baseline/mirror measurement chapters are left out, matching how Life
+  // Points treat them, so the card never hints at how those are scored.
+  const visibleDecisions = decisionLog.filter((d) => {
+    const ch = arc.chapters[d.chapterId];
+    return d.arcId === arc.id && !(ch?.isBaselineChoice || ch?.isMirrorChoice);
+  });
+  const smartMoves = visibleDecisions.filter((d) => d.financialQualityScore >= 4).length;
+  const visibleAvg = visibleDecisions.length
+    ? visibleDecisions.reduce((sum, d) => sum + d.financialQualityScore, 0) / visibleDecisions.length
+    : null;
+  const socialProofLine =
+    visibleAvg !== null
+      ? `Money-move score: ${visibleAvg.toFixed(1)} / 5 · ${smartMoves} smart moves`
+      : `${smartMoves} smart money moves`;
   const netWorth = profile.cumulativeStats.savings - profile.cumulativeStats.debt;
 
   // Remote per-player summary logging (see logPlayerSummary.ts) now happens
