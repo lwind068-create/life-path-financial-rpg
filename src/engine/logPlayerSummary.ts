@@ -9,7 +9,7 @@
 // Same rule as logDecision: localStorage/gameplay never depends on this.
 // If Firebase isn't configured, or the write fails, it silently no-ops.
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
-import { db, remoteLoggingEnabled } from "./firebaseClient";
+import { db, getUid, remoteLoggingEnabled } from "./firebaseClient";
 import { getSessionId } from "./sessionId";
 import { getTrafficSource } from "./analytics";
 
@@ -30,10 +30,16 @@ export interface PlayerSummaryInput {
 export async function logPlayerSummary(input: PlayerSummaryInput): Promise<void> {
   if (!remoteLoggingEnabled || !db) return;
   try {
+    // One summary doc per player account (players/{uid}) — see firestore.rules.
+    const uid = await getUid();
+    if (!uid) return;
+    const source = getTrafficSource();
     await setDoc(
-      doc(db, "players", getSessionId()),
+      doc(db, "players", uid),
       {
+        uid,
         sessionId: getSessionId(),
+        firstSeenAt: source.firstSeenAt ?? null,
         arcId: input.arcId,
         characterName: input.characterName,
         username: input.username,
@@ -43,8 +49,8 @@ export async function logPlayerSummary(input: PlayerSummaryInput): Promise<void>
         chaptersCompleted: input.chaptersCompleted,
         completed: input.completed,
         // First-touch channel (utm_source / referrer) — see analytics.ts.
-        trafficSource: getTrafficSource().source,
-        trafficCampaign: getTrafficSource().campaign,
+        trafficSource: source.source,
+        trafficCampaign: source.campaign,
         updatedAt: serverTimestamp(),
       },
       { merge: true },

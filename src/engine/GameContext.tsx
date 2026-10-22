@@ -35,6 +35,7 @@ import {
   type BuyError,
 } from "./boosts";
 import { getArcadeGame, type ArcadeGameId } from "./arcade";
+import { saveToCloud } from "./account";
 import { ACCENT_OPTIONS, UNLOCKABLE_ACCENTS, UNLOCKABLE_TITLES, UNLOCKABLE_FRAMES } from "../content/characterOptions";
 
 const PROFILE_KEY = "lifepath:profile";
@@ -316,6 +317,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     // fire once per chapter boundary, not on every stat/profile tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress.visitedChapterIds.length]);
+
+  // Cloud save (engine/account.ts): copy progress to saves/{uid} a few
+  // seconds after it changes, so it survives a new device or cleared data.
+  useEffect(() => {
+    if (!profile.username) return;
+    const t = window.setTimeout(() => void saveToCloud(), 4000);
+    return () => window.clearTimeout(t);
+  }, [profile, progress]);
 
   // Keep the public score in sync with Life Points earned anywhere (story,
   // quests, Arcade) — debounced so a burst of rewards is one write.

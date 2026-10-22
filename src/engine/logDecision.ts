@@ -10,7 +10,7 @@
 // step silently no-ops — it must never throw, block, or affect gameplay.
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import type { DecisionLogEntry } from "../content/types";
-import { db, remoteLoggingEnabled } from "./firebaseClient";
+import { db, getUid, remoteLoggingEnabled } from "./firebaseClient";
 import { getSessionId } from "./sessionId";
 
 const STORAGE_KEY = "lifepath:decisionLog";
@@ -26,8 +26,13 @@ export function logDecision(entry: DecisionLogEntry): void {
 async function logDecisionRemote(entry: DecisionLogEntry): Promise<void> {
   if (!remoteLoggingEnabled || !db) return;
   try {
+    // uid ties every research row to the player's locked account (see
+    // firestore.rules); sessionId is kept so older rows still group.
+    const uid = await getUid();
+    if (!uid) return;
     await addDoc(collection(db, "decisions"), {
       ...entry,
+      uid,
       sessionId: getSessionId(),
       createdAt: serverTimestamp(),
     });

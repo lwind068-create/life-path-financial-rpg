@@ -52,6 +52,8 @@ const SOURCE_KEY = "lifepath:trafficSource";
 export interface TrafficSource {
   source: string;
   campaign: string;
+  /** When this browser first opened the site (ms since epoch). */
+  firstSeenAt?: number;
 }
 
 function clean(value: string | null | undefined): string {
@@ -62,19 +64,19 @@ function detectSource(): TrafficSource {
   const params = new URLSearchParams(window.location.search);
   const utmSource = clean(params.get("utm_source") ?? params.get("ref"));
   const utmCampaign = clean(params.get("utm_campaign"));
-  if (utmSource) return { source: utmSource, campaign: utmCampaign };
+  if (utmSource) return { source: utmSource, campaign: utmCampaign, firstSeenAt: Date.now() };
 
   try {
     if (document.referrer) {
       const host = new URL(document.referrer).hostname.replace(/^www\./, "");
       if (host && host !== window.location.hostname.replace(/^www\./, "")) {
-        return { source: clean(host), campaign: "" };
+        return { source: clean(host), campaign: "", firstSeenAt: Date.now() };
       }
     }
   } catch {
     // unparsable referrer — treat as direct
   }
-  return { source: "direct", campaign: "" };
+  return { source: "direct", campaign: "", firstSeenAt: Date.now() };
 }
 
 /** First-touch source for this browser. Captured once, then remembered. */
