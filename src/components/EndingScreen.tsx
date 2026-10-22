@@ -159,7 +159,7 @@ export function EndingScreen() {
         </div>
       </div>
 
-      <Leaderboard playerName={profile.characterName} playerNetWorth={netWorth} playerLifePoints={profile.totalLifePointsEarned} />
+      <Leaderboard playerName={profile.username || profile.characterName} playerNetWorth={netWorth} playerLifePoints={profile.totalLifePointsEarned} />
 
       <div className="flex flex-col gap-3">
         <button

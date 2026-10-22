@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Trophy, Crown, Zap } from "lucide-react";
 import { AnimatedNumber } from "./AnimatedNumber";
-import { fetchTopEntries, publicName, type LeaderboardEntry, type LeaderboardMetric } from "../engine/leaderboard";
-import { getSessionId } from "../engine/sessionId";
-
-const TOP_COUNT = 10;
+import { fetchTopEntries, type LeaderboardEntry, type LeaderboardMetric } from "../engine/leaderboard";
+import { getUid } from "../engine/firebaseClient";
 
 interface LeaderboardProps {
+  /** The player's unique username. */
   playerName: string;
   playerNetWorth: number;
-  /** Player's lifetime Life Points earned (see engine/lifePoints.ts) — used for the "Life Points" tab. */
+  /** Player's lifetime Life Points earned (see engine/lifePoints.ts). */
   playerLifePoints: number;
+  /** Small 3-row version for Home/Ending, with a link to the full board. */
   compact?: boolean;
+  /** How many players to load. */
+  size?: number;
 }
 
 interface Row {
@@ -23,20 +26,24 @@ interface Row {
 }
 
 /**
- * Real players only — read from Firestore leaderboard/{sessionId}
- * (see engine/leaderboard.ts). The player's own row always uses their live
- * local numbers, so it's correct even before their latest score syncs. If
- * the board can't be loaded, only the player's own row is shown: no
- * made-up rivals.
+ * Real players only — read from Firestore scores/{uid} (see
+ * engine/leaderboard.ts). Names are unique usernames. The player's own row
+ * always uses their live local numbers. If the board can't be loaded, only
+ * the player's own row is shown: no made-up rivals.
  */
-export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, compact = false }: LeaderboardProps) {
-  const [metric, setMetric] = useState<LeaderboardMetric>("netWorth");
+export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, compact = false, size = 10 }: LeaderboardProps) {
+  const [metric, setMetric] = useState<LeaderboardMetric>("lifePoints");
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [myUid, setMyUid] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getUid().then(setMyUid);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    void fetchTopEntries(metric, TOP_COUNT).then((result) => {
+    void fetchTopEntries(metric, size).then((result) => {
       if (cancelled) return;
       setEntries(result);
       setLoaded(true);
@@ -44,30 +51,22 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
     return () => {
       cancelled = true;
     };
-  }, [metric]);
+  }, [metric, size]);
 
-  const mySessionId = getSessionId();
   const playerValue = metric === "netWorth" ? playerNetWorth : playerLifePoints;
-
+  const lowerName = playerName.toLowerCase();
   const others: Row[] = (entries ?? [])
-    .filter((e) => e.sessionId !== mySessionId)
-    .map((e) => ({
-      key: e.sessionId,
-      name: e.name,
-      value: metric === "netWorth" ? e.netWorth : e.lifePoints,
-      isPlayer: false,
-    }));
+    .filter((e) => e.uid !== myUid && e.name.toLowerCase() !== lowerName)
+    .map((e) => ({ key: e.uid, name: e.name, value: metric === "netWorth" ? e.netWorth : e.lifePoints, isPlayer: false }));
 
-  const rows: Row[] = [
-    { key: "you", name: publicName(playerName || "You"), value: playerValue, isPlayer: true },
-    ...others,
-  ].sort((a, b) => b.value - a.value);
+  const rows: Row[] = [{ key: "you", name: playerName || "You", value: playerValue, isPlayer: true }, ...others].sort(
+    (a, b) => b.value - a.value,
+  );
 
-  const playerRank = rows.findIndex((r) => r.isPlayer) + 1;
-  const limit = compact ? 3 : TOP_COUNT;
+  const limit = compact ? 3 : size;
   let visible = rows.slice(0, limit);
   if (!visible.some((r) => r.isPlayer)) {
-    visible = [...visible.slice(0, limit - 1), rows[playerRank - 1]];
+    visible = [...visible.slice(0, limit - 1), rows.find((r) => r.isPlayer)!];
   }
 
   const boardUnavailable = loaded && entries === null;
@@ -81,18 +80,13 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Trophy size={15} style={{ color: "var(--accent)" }} strokeWidth={2.25} />
-          <span className="font-hud text-xs font-semibold uppercase tracking-wider text-[var(--ink-dim)]">
-            Leaderboard
-          </span>
+          <span className="font-hud text-xs font-semibold uppercase tracking-wider text-[var(--ink-dim)]">Leaderboard</span>
         </div>
-        <div
-          className="flex shrink-0 items-center gap-0.5 rounded-full p-0.5"
-          style={{ background: "var(--bg-panel-solid)" }}
-        >
+        <div className="flex shrink-0 items-center gap-0.5 rounded-full p-0.5" style={{ background: "var(--bg-panel-solid)" }}>
           {(
             [
+              { id: "lifePoints", label: "Points" },
               { id: "netWorth", label: "Net worth" },
-              { id: "lifePoints", label: "Life points" },
             ] as const
           ).map((tab) => (
             <button
@@ -121,9 +115,7 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
               transition={{ duration: 0.5, ease: "easeOut" }}
               className="flex items-center gap-3 rounded-xl px-3 py-2"
               style={{
-                background: row.isPlayer
-                  ? "color-mix(in srgb, var(--accent) 14%, transparent)"
-                  : "var(--bg-panel-solid)",
+                background: row.isPlayer ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "var(--bg-panel-solid)",
                 boxShadow: row.isPlayer ? "inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent)" : undefined,
               }}
             >
@@ -133,10 +125,7 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
               >
                 {rank === 1 ? <Crown size={13} style={{ color: "var(--accent)" }} /> : rank}
               </span>
-              <span
-                className="flex-1 truncate text-left text-sm font-semibold"
-                style={{ color: row.isPlayer ? "var(--ink)" : "var(--ink-dim)" }}
-              >
+              <span className="flex-1 truncate text-left text-sm font-semibold" style={{ color: row.isPlayer ? "var(--ink)" : "var(--ink-dim)" }}>
                 {row.name}
                 {row.isPlayer && <span className="ml-1.5 text-[10px] font-normal text-[var(--ink-faint)]">(you)</span>}
               </span>
@@ -163,9 +152,13 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
         <p className="text-left text-[11px] leading-relaxed text-[var(--ink-faint)]">
           {metric === "netWorth"
             ? "Real players, ranked by savings minus debt."
-            : "Real players, ranked by lifetime Life Points earned — spending them never lowers your spot."}{" "}
-          Only your character name and scores are shown.
+            : "Real players, ranked by lifetime Life Points earned — story, quests and Arcade all count. Spending never lowers your spot."}
         </p>
+      )}
+      {compact && (
+        <Link to="/leaderboard" className="text-left text-xs font-semibold" style={{ color: "var(--accent)" }}>
+          See full leaderboard →
+        </Link>
       )}
     </div>
   );
