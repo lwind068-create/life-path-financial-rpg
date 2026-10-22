@@ -1,17 +1,15 @@
 rules_version = '2';
 
-// Security rules for the anonymous data-collection backend (see
-// src/engine/firebaseClient.ts, logDecision.ts, logPlayerSummary.ts).
+// Security rules for Life-Path.
 //
-// There's no Firebase Auth in this app — sessionId is just a random id
-// generated client-side (src/engine/sessionId.ts), not a verified
-// identity. So these rules can only do shape validation, not "prove this
-// write really came from that session." That's an accepted tradeoff for
-// an anonymous educational game: the worst a malicious client can do is
-// write junk rows, not read or corrupt anyone else's data (reads/updates/
-// deletes are blocked entirely — aggregate reporting goes through
-// firebase-admin via scripts/fetch-stats.mjs, which bypasses these rules
-// with a service account).
+// Research data (decisions/, players/) is keyed by a random client-side
+// sessionId (src/engine/sessionId.ts) and is write-only from the browser:
+// shape validation only, no reads — aggregate reporting goes through
+// firebase-admin via scripts/fetch-stats.mjs, which bypasses these rules.
+//
+// Usernames and the public leaderboard (usernames/, users/, scores/) use
+// Firebase Anonymous Auth, so writes are tied to request.auth.uid and can't
+// be forged for another player.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -35,24 +33,61 @@ service cloud.firestore {
       allow read, delete: if false;
     }
 
-    // Public leaderboard: character name (<= 16 chars) + two scores only.
-    // Readable by anyone so the in-game board can show real players; the
-    // research data in players/ stays unreadable. Writes are limited to
-    // this exact shape and to the doc matching the writer's sessionId.
-    match /leaderboard/{sessionId} {
+    // ---- Unique usernames (src/engine/username.ts) ----------------------
+    // Players sign in anonymously (Firebase Auth), so request.auth.uid is an
+    // unguessable id per browser. A username is claimed by writing BOTH
+    // usernames/{lowercase name} and users/{uid} in one batch; each rule
+    // requires the other doc to point back at it. Both are create-only, so a
+    // name can't be taken twice and a player can't hold two names.
+    function validUsername(name) {
+      return name is string && name.matches('^[A-Za-z0-9_]{3,16}$');
+    }
+
+    match /usernames/{lowerName} {
+      allow get: if true;   // availability check
+      allow list: if false;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['username', 'uid', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && validUsername(request.resource.data.username)
+        && request.resource.data.username.lower() == lowerName
+        && !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username == request.resource.data.username;
+      allow update, delete: if false;
+    }
+
+    match /users/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list: if false;
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['username', 'createdAt'])
+        && validUsername(request.resource.data.username)
+        && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username.lower())).data.uid == uid;
+      allow update, delete: if false;
+    }
+
+    // ---- Public leaderboard (src/engine/leaderboard.ts) -----------------
+    // Anyone can read. A player can only write their own doc, only under
+    // the username they own, and only in this exact shape.
+    match /scores/{uid} {
       allow read: if true;
-      allow create, update: if request.resource.data.keys().hasOnly(['sessionId', 'name', 'netWorth', 'lifePoints'])
-        && request.resource.data.sessionId == sessionId
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 16
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'netWorth', 'lifePoints', 'updatedAt'])
+        && request.resource.data.name == get(/databases/$(database)/documents/users/$(uid)).data.username
         && request.resource.data.netWorth is int
         && request.resource.data.lifePoints is int
         && request.resource.data.lifePoints >= 0
         && request.resource.data.netWorth > -10000000
         && request.resource.data.netWorth < 10000000
-        && request.resource.data.lifePoints < 1000000;
+        && request.resource.data.lifePoints < 10000000;
       allow delete: if false;
+    }
+
+    // Old leaderboard (pre-usernames). Closed — replaced by scores/.
+    match /leaderboard/{sessionId} {
+      allow read, write: if false;
     }
 
     // Deny everything else by default.
