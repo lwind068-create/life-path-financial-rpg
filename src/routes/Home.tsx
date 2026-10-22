@@ -123,7 +123,7 @@ export function Home() {
       {hasCharacter && (
         <div className="w-full">
           <Leaderboard
-            playerName={profile.characterName}
+            playerName={profile.username || profile.characterName}
             playerNetWorth={profile.cumulativeStats.savings - profile.cumulativeStats.debt}
             playerLifePoints={profile.totalLifePointsEarned}
             compact
