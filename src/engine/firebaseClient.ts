@@ -10,6 +10,7 @@
 // no-ops. Never throws, never blocks gameplay.
 import { initializeApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, signInAnonymously, type Auth } from "firebase/auth";
 
 const config: FirebaseOptions = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -32,6 +33,36 @@ export const firebaseApp: FirebaseApp | null = isConfigured ? initializeApp(conf
 export const db: Firestore | null = firebaseApp ? getFirestore(firebaseApp) : null;
 
 export const analyticsConfigured = Boolean(firebaseApp && config.measurementId);
+
+// Anonymous Firebase Auth: every browser gets an unguessable user id with no
+// password. Usernames and leaderboard scores are tied to it in
+// firestore.rules, so nobody can claim someone else's name or overwrite
+// their score. (It can later be upgraded to email/password sign-in without
+// losing the account.)
+export const auth: Auth | null = firebaseApp ? getAuth(firebaseApp) : null;
+
+let uidPromise: Promise<string | null> | null = null;
+
+/** Resolves to this browser's Firebase user id, signing in anonymously if needed. Null if Firebase is off or sign-in fails. */
+export function getUid(): Promise<string | null> {
+  if (!auth) return Promise.resolve(null);
+  if (!uidPromise) {
+    const a = auth;
+    uidPromise = new Promise<string | null>((resolve) => {
+      const stop = onAuthStateChanged(a, (user) => {
+        stop();
+        if (user) return resolve(user.uid);
+        signInAnonymously(a)
+          .then((cred) => resolve(cred.user.uid))
+          .catch(() => {
+            uidPromise = null; // allow a retry later
+            resolve(null);
+          });
+      });
+    });
+  }
+  return uidPromise;
+}
 
 if (!isConfigured && import.meta.env.DEV) {
   // eslint-disable-next-line no-console

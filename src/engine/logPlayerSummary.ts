@@ -16,6 +16,8 @@ import { getTrafficSource } from "./analytics";
 export interface PlayerSummaryInput {
   arcId: string;
   characterName: string;
+  /** Unique username (may be empty for players from before usernames existed). */
+  username: string;
   avgQualityScore: number | null;
   avgKnowledgeGain: number | null;
   netWorth: number;
@@ -34,6 +36,7 @@ export async function logPlayerSummary(input: PlayerSummaryInput): Promise<void>
         sessionId: getSessionId(),
         arcId: input.arcId,
         characterName: input.characterName,
+        username: input.username,
         avgQualityScore: input.avgQualityScore,
         avgKnowledgeGain: input.avgKnowledgeGain,
         netWorth: input.netWorth,

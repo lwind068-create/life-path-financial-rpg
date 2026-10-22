@@ -53,6 +53,8 @@ interface OutcomeChoice {
 
 /** The whole game is one character, one save slot — this is that character. */
 interface PlayerProfile {
+  /** Unique username claimed on first visit (see engine/username.ts). Empty until claimed. */
+  username: string;
   characterName: string;
   accentId: string | null;
   /** True once the player has explicitly confirmed their color (clicked "Let's go"). */
@@ -95,6 +97,7 @@ interface StoryProgress {
 
 function freshProfile(): PlayerProfile {
   return {
+    username: "",
     characterName: "",
     accentId: null,
     onboarded: false,
@@ -188,6 +191,8 @@ interface GameContextValue {
   finishArcadeGame: (id: ArcadeGameId, score: number, reward: number) => void;
   totalChapterCount: number;
   setCharacterName: (name: string) => void;
+  /** Saves the claimed unique username (also used as the character's name). */
+  setUsername: (name: string) => void;
   setAccentId: (id: string) => void;
   completeOnboarding: () => void;
   continueFromNarrative: () => void;
@@ -292,6 +297,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     void logPlayerSummary({
       arcId: lifePathArc.id,
       characterName: profile.characterName,
+      username: profile.username,
       avgQualityScore,
       avgKnowledgeGain,
       netWorth,
@@ -299,7 +305,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       completed: Boolean(currentChapterNode?.isEnding),
     });
     void publishLeaderboardEntry({
-      name: profile.characterName,
+      username: profile.username,
       // Same figure the on-screen board shows (Home/EndingScreen).
       netWorth: profile.cumulativeStats.savings - profile.cumulativeStats.debt,
       lifePoints: profile.totalLifePointsEarned,
@@ -311,6 +317,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress.visitedChapterIds.length]);
 
+  // Keep the public score in sync with Life Points earned anywhere (story,
+  // quests, Arcade) — debounced so a burst of rewards is one write.
+  useEffect(() => {
+    if (!profile.username) return;
+    const t = window.setTimeout(() => {
+      void publishLeaderboardEntry({
+        username: profile.username,
+        netWorth: profile.cumulativeStats.savings - profile.cumulativeStats.debt,
+        lifePoints: profile.totalLifePointsEarned,
+      });
+    }, 1500);
+    return () => window.clearTimeout(t);
+  }, [profile.username, profile.totalLifePointsEarned, profile.cumulativeStats.savings, profile.cumulativeStats.debt]);
+
   const currentChapter = lifePathArc.chapters[progress.currentChapterId] ?? lifePathArc.chapters[lifePathArc.startChapterId];
   const currentQuestion = currentChapter.questions?.[progress.currentQuestionIndex] ?? null;
   const questionProgress = currentChapter.questions
@@ -320,6 +340,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const setCharacterName = useCallback((name: string) => {
     setProfile((p) => ({ ...p, characterName: name.trim() || "Player" }));
+  }, []);
+
+  const setUsername = useCallback((name: string) => {
+    setProfile((p) => ({ ...p, username: name, characterName: name }));
   }, []);
 
   const setAccentId = useCallback((id: string) => {
@@ -620,6 +644,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       lastOutcome,
       totalChapterCount,
       setCharacterName,
+      setUsername,
       setAccentId,
       completeOnboarding,
       continueFromNarrative,
@@ -649,6 +674,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       lastOutcome,
       totalChapterCount,
       setCharacterName,
+      setUsername,
       setAccentId,
       completeOnboarding,
       continueFromNarrative,
