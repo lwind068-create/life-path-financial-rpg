@@ -10,6 +10,9 @@ import { About } from "./routes/About";
 import { Character } from "./routes/Character";
 import { Shop } from "./routes/Shop";
 import { Arcade } from "./routes/Arcade";
+import { LeaderboardPage } from "./routes/LeaderboardPage";
+import { UsernameScreen } from "./components/UsernameScreen";
+import { useGame } from "./engine/GameContext";
 import { Notices } from "./components/Notices";
 import { Debug } from "./routes/Debug";
 import { getTrafficSource } from "./engine/analytics";
@@ -22,7 +25,9 @@ function Shell() {
   // /debug is an internal data-review tool, not part of the game — keep it
   // free of game chrome (nav, background, accent theme) so it reads as what
   // it is.
-  const isDebug = useLocation().pathname === "/debug";
+  const { pathname } = useLocation();
+  const isDebug = pathname === "/debug";
+  const { profile } = useGame();
 
   if (isDebug) {
     return (
@@ -37,14 +42,19 @@ function Shell() {
       <BackgroundFX />
       <NavBar />
       <Notices />
+      {!profile.username && pathname !== "/about" ? (
+        <UsernameScreen />
+      ) : (
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/play" element={<Game />} />
         <Route path="/character" element={<Character />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/arcade" element={<Arcade />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/about" element={<About />} />
       </Routes>
+      )}
     </AccentTheme>
   );
 }
