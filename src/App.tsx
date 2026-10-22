@@ -11,6 +11,9 @@ import { Character } from "./routes/Character";
 import { Shop } from "./routes/Shop";
 import { Arcade } from "./routes/Arcade";
 import { LeaderboardPage } from "./routes/LeaderboardPage";
+import { Account } from "./routes/Account";
+import { Admin } from "./routes/Admin";
+import { Privacy } from "./routes/Privacy";
 import { UsernameScreen } from "./components/UsernameScreen";
 import { useGame } from "./engine/GameContext";
 import { Notices } from "./components/Notices";
@@ -42,7 +45,7 @@ function Shell() {
       <BackgroundFX />
       <NavBar />
       <Notices />
-      {!profile.username && pathname !== "/about" ? (
+      {!profile.username && pathname !== "/about" && pathname !== "/privacy" ? (
         <UsernameScreen />
       ) : (
       <Routes>
@@ -52,6 +55,9 @@ function Shell() {
         <Route path="/shop" element={<Shop />} />
         <Route path="/arcade" element={<Arcade />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/account" element={<Account />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/about" element={<About />} />
       </Routes>
       )}
