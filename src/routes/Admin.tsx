@@ -7,6 +7,7 @@ import { ArrowLeft, Download, Lock, RefreshCw } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../engine/firebaseClient";
 import { useAuthInfo } from "../engine/account";
+import { ARCADE_GAMES } from "../engine/arcade";
 
 interface PlayerRow {
   id: string;
@@ -19,7 +20,21 @@ interface PlayerRow {
   netWorth: number;
   firstSeen: number | null;
   updated: number | null;
+  lifePointsEarned: number;
+  dailyStreak: number;
+  bestStreak: number;
+  daysPlayed: number;
+  questsCompleted: number;
+  boostsBought: number;
+  arcadePlays: number;
+  arcadePlaysByGame: Record<string, number>;
+  arcadeBest: Record<string, number>;
+  vault: number;
 }
+
+const num = (v: unknown) => (typeof v === "number" && !Number.isNaN(v) ? v : 0);
+const numMap = (v: unknown): Record<string, number> =>
+  v && typeof v === "object" ? Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, num(x)])) : {};
 
 function toMillis(v: unknown): number | null {
   if (typeof v === "number") return v;
@@ -111,6 +126,16 @@ export function Admin() {
             netWorth: Number(x.netWorth ?? 0),
             firstSeen: toMillis(x.firstSeenAt),
             updated: toMillis(x.updatedAt),
+            lifePointsEarned: num(x.totalLifePointsEarned),
+            dailyStreak: num(x.dailyStreak),
+            bestStreak: num(x.bestStreak),
+            daysPlayed: num(x.daysPlayed),
+            questsCompleted: num(x.questsCompleted),
+            boostsBought: num(x.boostsBought),
+            arcadePlays: num(x.arcadePlays),
+            arcadePlaysByGame: numMap(x.arcadePlaysByGame),
+            arcadeBest: numMap(x.arcadeBest),
+            vault: num(x.vault),
           };
         }),
       );
@@ -150,7 +175,30 @@ export function Admin() {
       if (counts.has(k)) counts.set(k, (counts.get(k) ?? 0) + 1);
     }
     const gains = rows.map((r) => r.avgKnowledgeGain);
+    const sum = (f: (r: PlayerRow) => number) => rows.reduce((a, r) => a + f(r), 0);
+    const arcade = ARCADE_GAMES.map((g) => {
+      const playedBy = rows.filter((r) => (r.arcadePlaysByGame[g.id] ?? 0) > 0);
+      return {
+        id: g.id,
+        name: g.name,
+        plays: sum((r) => r.arcadePlaysByGame[g.id] ?? 0),
+        players: playedBy.length,
+        avgBest: avg(playedBy.map((r) => (r.arcadeBest[g.id] ?? null) as number | null)),
+      };
+    });
+    const engaged = {
+      avgLp: avg(rows.map((r) => r.lifePointsEarned)),
+      quests: sum((r) => r.questsCompleted),
+      boosts: sum((r) => r.boostsBought),
+      arcadePlays: sum((r) => r.arcadePlays),
+      streak3: rows.filter((r) => r.bestStreak >= 3).length,
+      returning: rows.filter((r) => r.daysPlayed >= 2).length,
+      avgDays: avg(rows.map((r) => (r.daysPlayed > 0 ? r.daysPlayed : null))),
+      vault: sum((r) => r.vault),
+    };
     return {
+      arcade,
+      engaged,
       players: rows.length,
       finished,
       rate: rows.length ? (finished / rows.length) * 100 : 0,
@@ -164,10 +212,10 @@ export function Admin() {
 
   const exportCsv = () => {
     if (!rows) return;
-    const head = ["id", "username", "trafficSource", "chaptersCompleted", "completed", "avgQualityScore", "avgKnowledgeGain", "netWorth", "firstSeen", "updated"];
+    const head = ["id", "username", "trafficSource", "chaptersCompleted", "completed", "avgQualityScore", "avgKnowledgeGain", "netWorth", "lifePointsEarned", "daysPlayed", "bestStreak", "questsCompleted", "boostsBought", "arcadePlays", "vault", "firstSeen", "updated"];
     const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = rows.map((r) =>
-      [r.id, r.username, r.trafficSource, r.chaptersCompleted, r.completed, r.avgQualityScore ?? "", r.avgKnowledgeGain ?? "", r.netWorth, r.firstSeen ? new Date(r.firstSeen).toISOString() : "", r.updated ? new Date(r.updated).toISOString() : ""].map(esc).join(","),
+      [r.id, r.username, r.trafficSource, r.chaptersCompleted, r.completed, r.avgQualityScore ?? "", r.avgKnowledgeGain ?? "", r.netWorth, r.lifePointsEarned, r.daysPlayed, r.bestStreak, r.questsCompleted, r.boostsBought, r.arcadePlays, r.vault, r.firstSeen ? new Date(r.firstSeen).toISOString() : "", r.updated ? new Date(r.updated).toISOString() : ""].map(esc).join(","),
     );
     const blob = new Blob([[head.join(","), ...lines].join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
@@ -214,6 +262,43 @@ export function Admin() {
                 <Tile label="Avg decision quality" value={stats.quality === null ? "—" : `${stats.quality.toFixed(2)} / 5`} />
               </div>
 
+              <h2 className="mt-2 text-sm font-bold uppercase tracking-wide text-[var(--ink-dim)]">Engagement</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Tile label="Avg Life Points earned" value={stats.engaged.avgLp === null ? "—" : Math.round(stats.engaged.avgLp).toLocaleString()} />
+                <Tile label="Came back another day" value={String(stats.engaged.returning)} note={stats.engaged.avgDays === null ? undefined : `avg ${stats.engaged.avgDays.toFixed(1)} days played`} />
+                <Tile label="3+ day streaks" value={String(stats.engaged.streak3)} />
+                <Tile label="Quests completed" value={stats.engaged.quests.toLocaleString()} />
+                <Tile label="Boosts bought" value={stats.engaged.boosts.toLocaleString()} />
+                <Tile label="Arcade plays" value={stats.engaged.arcadePlays.toLocaleString()} />
+                <Tile label="Points in Savings Vaults" value={stats.engaged.vault.toLocaleString()} />
+              </div>
+
+              <div className="flex flex-col gap-2 rounded-3xl border p-5" style={{ borderColor: "var(--hairline)", background: "var(--bg-panel-solid)" }}>
+                <h2 className="text-sm font-bold text-[var(--ink)]">Arcade</h2>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-wide text-[var(--ink-faint)]">
+                      <th className="py-1.5 font-semibold">Game</th>
+                      <th className="py-1.5 text-right font-semibold">Plays</th>
+                      <th className="py-1.5 text-right font-semibold">Players</th>
+                      <th className="py-1.5 text-right font-semibold">Avg best</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.arcade.map((g) => (
+                      <tr key={g.id} className="border-t text-[var(--ink)]" style={{ borderColor: "var(--hairline)" }}>
+                        <td className="py-2">{g.name}</td>
+                        <td className="py-2 text-right font-hud">{g.plays}</td>
+                        <td className="py-2 text-right font-hud">{g.players}</td>
+                        <td className="py-2 text-right font-hud">
+                          {g.avgBest === null ? "—" : g.id === "portfolio" ? `$${Math.round(g.avgBest).toLocaleString()}` : g.avgBest.toFixed(1)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
               <div className="flex flex-col gap-2 rounded-3xl border p-5" style={{ borderColor: "var(--hairline)", background: "var(--bg-panel-solid)" }}>
                 <h2 className="text-sm font-bold text-[var(--ink)]">New players per day · last 14 days</h2>
                 <DailyChart days={stats.daily} />
@@ -243,7 +328,7 @@ export function Admin() {
                 </table>
               </div>
               <p className="text-[11px] leading-relaxed text-[var(--ink-faint)]">
-                Players = anyone with at least one finished chapter. Knowledge gain compares each player's answer on a baseline decision with a matching later one. Includes players from before usernames existed.
+                Players = anyone with a username who has finished a chapter or played for ~15 seconds. Engagement numbers start counting from the October 2026 update. Knowledge gain compares each player's answer on a baseline decision with a matching later one. Includes players from before usernames existed.
               </p>
             </>
           )}
