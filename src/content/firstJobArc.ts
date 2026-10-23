@@ -1,151 +1,113 @@
-// "First Job" story arc — content only. No game-engine logic lives here.
+// "First Job" — content only. No game-engine logic lives here.
 //
-// Three chapters per playthrough: job_offer (baseline) -> promotion_offer
-// (mirror) -> ending. See src/engine/scoring.ts for how the baseline and
-// mirror chapters are compared, and that file's header comment for the
-// ethical framing.
+// job_offer (baseline) and promotion_offer (mirror) are the research pair
+// — see src/engine/scoring.ts. Their question/choice ids and
+// financialQualityScore values are kept from the original version so the
+// measure stays comparable, and they never use showIf (every player must
+// see the same questions). The ending chapter is shared by the whole game.
 //
-// The position of the highest-quality choice (score 5) is deliberately
-// rotated across A/B/C from question to question — never let it settle
-// into a fixed slot (e.g. "always the third option"): that's a pattern a
-// player can learn and exploit without doing any real financial
-// reasoning. Vary each choice's opening phrasing too, so no lexical tic
-// (e.g. always starting the smart option with "Actually...") becomes a
-// giveaway on its own.
+// Rotate the position of the best (score 5) choice from question to
+// question, and don't let the best choice always be the longest one.
 import type { StoryArc } from "./types";
 
 export const firstJobArc: StoryArc = {
   id: "first_job",
   title: "First Job",
   blurb: "Graduate. Get a job. Make the calls that shape your twenties.",
-  nextArcTeaser: "Your story keeps going. More chapters on the way.",
   startChapterId: "job_offer",
   pathLength: 3,
   chapters: {
     job_offer: {
       id: "job_offer",
-      title: "Two offers",
+      title: "Two job offers",
       icon: "briefcase",
       isBaselineChoice: true,
       narrative: "",
       choices: [],
+      briefing: {
+        when: "Age 22 · Two months after graduation",
+        situation:
+          "You just finished school. You have $900 in checking (that's your Cash — what you spend from) and $1,500 in Savings from summer jobs. No debt yet. Two companies want to hire you, and you have 48 hours to pick one.",
+        goal: "Figure out which job is really worth more — the bigger salary isn't always the better deal.",
+        terms: [
+          { term: "Salary", meaning: "Your yearly pay before taxes. What actually lands in your account (take-home pay) is less." },
+          { term: "Benefits", meaning: "Things a job gives you besides pay, like health insurance. They're worth real money." },
+          { term: "401(k) match", meaning: "Retirement savings where your employer adds free money when you save. A 4% match on $44,000 is about $1,760 a year." },
+          { term: "Signing bonus", meaning: "A one-time payment for accepting the job. It doesn't repeat next year." },
+        ],
+        trend:
+          "An ER visit without insurance can easily cost $2,000 or more, and buying your own health plan often runs a few hundred dollars a month.",
+      },
       questions: [
         {
           id: "job_offer_q1_first_look",
           icon: "briefcase",
-          randomEvent: {
-            id: "welcome_bonus",
-            chance: 0.2,
-            bannerText: "Your new bank throws in a $25 welcome bonus just for opening an account. Small, but it made you smile.",
-            statEffects: { savings: 25 },
-          },
           variants: [
-            { id: "v1", narrative: "Diploma in hand, a few months out of school — two offer letters land in your inbox. Meridian Logistics: $52,000/year, no health insurance, no 401(k) match. Harbor & Finch: $44,000/year, full health coverage, 4% match. Before anything else, what do you actually look at first?" },
-            { id: "v2", narrative: "Fresh out of school, staring at two real offers: Meridian Logistics at $52,000 with no benefits, Harbor & Finch at $44,000 with full health coverage and a 401(k) match — an $8,000 gap in salary alone. Where does your eye go first when you open both letters?" },
-            { id: "v3", narrative: "Diploma barely framed, and already two names to choose between: Meridian Logistics — $52k, no insurance, no match. Harbor & Finch — $44k, full coverage, 4% match. What's the first thing you actually check?" },
+            {
+              id: "v1",
+              narrative:
+                "Offer 1 — Meridian Logistics: $52,000 a year, no health insurance, no 401(k) match, $2,000 signing bonus.\nOffer 2 — Harbor & Finch: $44,000 a year, full health insurance, 4% 401(k) match.\n\nWhat do you compare first?",
+            },
           ],
           choices: [
-            { id: "q1_total_comp", label: "Total compensation — salary plus what the benefits are actually worth in dollars.", outcomeNarrative: "You start with the number that actually matters, not just the biggest one.", financialQualityScore: 5, statEffects: { savings: 875, stress: 0 } },
-            { id: "q1_base_salary", label: "The base salary, since that's what hits your account every two weeks.", outcomeNarrative: "It's the number you'll feel first, but not the whole picture.", financialQualityScore: 3, statEffects: { savings: -160, stress: 0 } },
-            { id: "q1_sounds_better", label: "Whichever one sounds better when you say it out loud.", outcomeNarrative: "$52k sounds better. It also isn't the whole story.", financialQualityScore: 2, statEffects: { savings: -875, stress: 1 } },
+            { id: "q1_total_comp", label: "Total value: salary plus what the benefits are worth", outcomeNarrative: "Good start. Benefits are part of your pay — they just don't show up on the paycheck.", financialQualityScore: 5 },
+            { id: "q1_base_salary", label: "Just the salaries", outcomeNarrative: "Salary matters, but it leaves out insurance and the 401(k) match.", financialQualityScore: 3 },
+            { id: "q1_sounds_better", label: "Whichever one sounds better", outcomeNarrative: "$52,000 sounds better. That doesn't mean it is.", financialQualityScore: 2 },
           ],
         },
         {
           id: "job_offer_q2_insurance",
           icon: "briefcase",
           variants: [
-            { id: "v1", narrative: "Meridian's health plan: $0, because there isn't one. Harbor & Finch's: fully covered. How do you actually weigh that gap?" },
-            { id: "v2", narrative: "One offer includes health coverage. The other leaves you buying your own — easily $250-350 a month on the open market. How do you size up the difference?" },
-            { id: "v3", narrative: "No insurance at Meridian means a single ER visit — average bill north of $2,000 — lands entirely on you. How do you factor that in?" },
+            { id: "v1", narrative: "Meridian has no health insurance. Buying your own plan costs about $300 a month. How do you handle that?" },
           ],
           choices: [
-            { id: "q2_skip_it", label: "Assume you're healthy and skip the math — insurance is a 'later' problem.", outcomeNarrative: "You're probably fine. 'Probably' is doing a lot of work in that sentence.", financialQualityScore: 2, statEffects: { savings: -225, stress: 1 } },
-            { id: "q2_price_a_plan", label: "Price an actual marketplace plan and subtract that monthly cost from Meridian's edge.", outcomeNarrative: "The real number is smaller than the sticker-price gap suggested.", financialQualityScore: 5, statEffects: { savings: 225, stress: 0 } },
-            { id: "q2_guess", label: "Guess it's 'a few hundred bucks a month' without checking a real quote.", outcomeNarrative: "Your estimate is in the right neighborhood, more by luck than by checking.", financialQualityScore: 3, statEffects: { savings: -40, stress: 0 } },
+            { id: "q2_skip_it", label: "Skip it — I'm young and healthy", outcomeNarrative: "Most months you'd be fine. One accident could cost thousands.", financialQualityScore: 2, statEffects: { stress: 1 } },
+            { id: "q2_price_a_plan", label: "Look up a real plan price and subtract it from Meridian's pay", outcomeNarrative: "$300 × 12 = $3,600 a year. Meridian's $8,000 lead just got a lot smaller.", financialQualityScore: 5 },
+            { id: "q2_guess", label: "Guess it's a few hundred a month", outcomeNarrative: "Close enough this time — but it was a guess.", financialQualityScore: 3 },
           ],
         },
         {
           id: "job_offer_q3_match",
           icon: "briefcase",
+          mathChallenge: { prompt: "Harbor & Finch matches 4% of $44,000. How much free money is that per year?", answer: 1760, unit: "$" },
           variants: [
-            { id: "v1", narrative: "Harbor & Finch matches 4% of your 401(k) — on $44,000, that's about $1,760 a year in free money. Meridian offers nothing. Does that change anything for you?" },
-            { id: "v2", narrative: "A 4% match is basically a guaranteed raise if you take it — roughly $1,760 a year here. How do you treat it?" },
-            { id: "v3", narrative: "One job hands you an extra ~$1,760 a year for showing up. The other doesn't. How much weight does that get?" },
+            { id: "v1", narrative: "Harbor & Finch adds 4% of your salary to your retirement account if you save too. Meridian adds nothing. How do you count that?" },
           ],
           choices: [
-            { id: "q3_note_it", label: "Note it as a nice-to-have and move on without running a number on it.", outcomeNarrative: "You register it. You don't really weigh it.", financialQualityScore: 3, statEffects: { savings: -40, stress: 0 } },
-            { id: "q3_ignore_it", label: "Ignore it — retirement is decades away and doesn't feel real yet.", outcomeNarrative: "It doesn't feel real. The math on missed matches is real anyway.", financialQualityScore: 2, statEffects: { savings: -190, stress: 1 } },
-            { id: "q3_calculate_it", label: "Calculate roughly what a 4% match is worth in raw dollars over the next year alone.", outcomeNarrative: "Once it's a real number instead of a vague benefit, it's harder to wave off.", financialQualityScore: 5, statEffects: { savings: 190, stress: 0 } },
+            { id: "q3_note_it", label: "Nice bonus, but I won't count it", outcomeNarrative: "It's real money even if you can't spend it today.", financialQualityScore: 3 },
+            { id: "q3_ignore_it", label: "Ignore it — retirement is forever away", outcomeNarrative: "Money saved at 22 has the most years to grow. Skipping it costs the most.", financialQualityScore: 2 },
+            { id: "q3_calculate_it", label: "Count it as about $1,760 a year of extra pay", outcomeNarrative: "Right. Now the two offers are much closer than they looked.", financialQualityScore: 5 },
           ],
         },
         {
           id: "job_offer_q4_bonus",
           icon: "briefcase",
-          variants: [
-            { id: "v1", narrative: "Meridian's $2,000 signing bonus is real cash, fast. How do you factor it in?" },
-            { id: "v2", narrative: "A $2,000 bonus if you start within two weeks. Tempting, right up until you weigh it against a full year." },
-            { id: "v3", narrative: "$2,000 up front versus a $200 gift card. The gap is obvious. Is it the whole story?" },
-          ],
+          variants: [{ id: "v1", narrative: "Meridian offers a $2,000 signing bonus. How much should it matter?" }],
           choices: [
-            { id: "q4_one_time", label: "Treat it as a one-time number — worth exactly $2,000 once, not a reason to ignore the annual gap.", outcomeNarrative: "You put it in its place: real, but small next to a full year of pay.", financialQualityScore: 5, statEffects: { savings: 225, stress: 0 } },
-            { id: "q4_tip_scales", label: "Let it tip the scales more than a one-time payment probably should.", outcomeNarrative: "It's $2,000. It's also one-eighteenth of a year's salary, tops.", financialQualityScore: 3, statEffects: { savings: -40, stress: 0 } },
-            { id: "q4_same_money", label: "Treat the bonus and the year-one salary as basically the same kind of money.", outcomeNarrative: "A one-time bonus and a recurring salary don't behave the same way over five years.", financialQualityScore: 2, statEffects: { savings: -225, stress: 1 } },
+            { id: "q4_one_time", label: "Count it once — it won't come back next year", outcomeNarrative: "Exactly. Benefits repeat every year; the bonus doesn't.", financialQualityScore: 5 },
+            { id: "q4_tip_scales", label: "A lot — $2,000 is a lot of money", outcomeNarrative: "It is, once. Over a few years the benefits win.", financialQualityScore: 3 },
+            { id: "q4_same_money", label: "Treat it like part of the yearly salary", outcomeNarrative: "That makes Meridian look $2,000 better every year. It isn't.", financialQualityScore: 2, statEffects: { stress: 1 } },
           ],
         },
         {
           id: "job_offer_q5_negotiate",
           icon: "briefcase",
-          variants: [
-            { id: "v1", narrative: "You have 48 hours and a $200 gift-card bonus that could easily be a $1,000 check instead. Do you try to negotiate either offer before deciding?" },
-            { id: "v2", narrative: "Neither company said $52k or $44k was final. Do you ask for even $2,000 more?" },
-            { id: "v3", narrative: "48 hours isn't much time, but it might be enough to ask for another $1,000 on the table." },
-          ],
+          variants: [{ id: "v1", narrative: "Neither offer says it's final. Do you ask for more?" }],
           choices: [
-            { id: "q5_no_ask", label: "No — asking feels risky for a first job, so you just pick one.", outcomeNarrative: "You take a number no one pressure-tested but you.", financialQualityScore: 2, statEffects: { savings: -225, stress: 1 } },
-            { id: "q5_soft_mention", label: "Mention you have another offer, vaguely, and see if anything moves.", outcomeNarrative: "It's a soft ask. It gets a soft answer.", financialQualityScore: 3, statEffects: { savings: -40, stress: 0 } },
-            { id: "q5_specific_ask", label: "Ask Harbor & Finch directly if there's flexibility on the signing bonus, since salary is the real gap.", outcomeNarrative: "The worst answer is no, and you asked a specific, answerable question.", financialQualityScore: 5, statEffects: { savings: 225, stress: 0 } },
-          ],
-        },
-        {
-          id: "job_offer_q6_commute",
-          icon: "briefcase",
-          variants: [
-            { id: "v1", narrative: "Meridian's office is 15 minutes closer. Over a year, that gap is worth real gas money. Does that change the math?" },
-            { id: "v2", narrative: "One job costs you an extra $35-50 a month in gas and time. Do you put a number on that?" },
-            { id: "v3", narrative: "Fifteen extra minutes each way, five days a week — call it $500 a year in gas and time. Worth counting?" },
-          ],
-          choices: [
-            { id: "q6_shrug", label: "Notice it, shrug, and figure it'll be fine.", outcomeNarrative: "It probably will be. You didn't actually check what 'fine' costs.", financialQualityScore: 3, statEffects: { savings: -10, stress: 0 } },
-            { id: "q6_estimate", label: "Estimate the extra gas and time cost per month and fold it into the comparison.", outcomeNarrative: "It's a small number, but now it's a known one instead of a guess.", financialQualityScore: 5, statEffects: { savings: 60, stress: 0 } },
-            { id: "q6_ignore", label: "Ignore commute entirely — a job's a job.", outcomeNarrative: "A job's a job. A commute is also, quietly, a monthly expense.", financialQualityScore: 2, statEffects: { savings: -60, stress: 1 } },
-          ],
-        },
-        {
-          id: "job_offer_q7_deadline",
-          icon: "briefcase",
-          variants: [
-            { id: "v1", narrative: "The clock's ticking on 48 hours — and an $8,000-a-year decision deserves more than a coin flip. How do you actually spend that time?" },
-            { id: "v2", narrative: "Two days to decide something worth thousands of dollars a year, every year. What's your process?" },
-            { id: "v3", narrative: "48 hours sounds like plenty until you're 40 hours in, still unsure, and that $8,000 gap is still just a feeling." },
-          ],
-          choices: [
-            { id: "q7_set_time", label: "Set aside a real hour to run the numbers, rather than deciding in bits and pieces.", outcomeNarrative: "One focused hour beats two days of half-thinking about it in the shower.", financialQualityScore: 5, statEffects: { savings: 875, stress: 0 } },
-            { id: "q7_on_and_off", label: "Think about it on and off, and decide whenever it starts to feel obvious.", outcomeNarrative: "It eventually feels obvious. You're not fully sure why.", financialQualityScore: 3, statEffects: { savings: -160, stress: 0 } },
-            { id: "q7_last_minute", label: "Wait until the last few hours and decide under pressure.", outcomeNarrative: "You decide. The deadline did more of the deciding than you did.", financialQualityScore: 2, statEffects: { savings: -875, stress: 1 } },
+            { id: "q5_no_ask", label: "No, I don't want to seem greedy", outcomeNarrative: "Asking politely almost never costs you the offer. Not asking can cost you money.", financialQualityScore: 2 },
+            { id: "q5_soft_mention", label: "Hint that I have another offer", outcomeNarrative: "A vague hint gets a vague answer. Nothing changes.", financialQualityScore: 3 },
+            { id: "q5_specific_ask", label: "Ask Harbor & Finch for a $1,000 signing bonus", outcomeNarrative: "A clear, specific ask. They say they'll see what they can do.", financialQualityScore: 5, sets: ["asked_bonus"] },
           ],
         },
         {
           id: "job_offer_q8_final_call",
           icon: "briefcase",
-          variants: [
-            { id: "v1", narrative: "Numbers aside, it's time to actually pick — and lock in a salary for the next year at least. What tips it?" },
-            { id: "v2", narrative: "You've thought it through. Now you have to choose between $52,000 and $44,000-plus-benefits. What's the deciding factor?" },
-            { id: "v3", narrative: "Last call on an $8,000-a-year fork in the road — how do you make the final decision?" },
-          ],
+          variants: [{ id: "v1", narrative: "Time to choose. Which job do you take?" }],
           choices: [
-            { id: "q8_exciting", label: "Go with whichever offer feels more exciting in the moment — Meridian's bigger check.", outcomeNarrative: "Excitement is a real signal. It's not the same as evidence. You take Meridian, bonus and all.", financialQualityScore: 2, statEffects: { savings: -875, stress: 1 } },
-            { id: "q8_first_instinct", label: "Go with your first instinct from when you opened the emails — Harbor & Finch, benefits felt right.", outcomeNarrative: "First instincts are sometimes right. This time it's a coin flip whether it was. You take Harbor & Finch anyway.", financialQualityScore: 3, statEffects: { savings: -160, stress: 0 } },
-            { id: "q8_the_numbers", label: "Go with whichever offer won on the numbers you actually worked out — Harbor & Finch, clearly.", outcomeNarrative: "You decide based on what you found, not just how you felt when you started, and take Harbor & Finch for a reason you can point to.", financialQualityScore: 5, statEffects: { savings: 875, stress: 0 } },
+            { id: "q8_exciting", label: "Meridian — bigger paycheck", outcomeNarrative: "You take Meridian. Bigger checks, but no insurance and no match. That will matter later.", financialQualityScore: 2, statEffects: { stress: 1 }, sets: ["job_meridian"] },
+            { id: "q8_first_instinct", label: "Harbor & Finch — it just feels right", outcomeNarrative: "You take Harbor & Finch. Good pick, even if it was a gut call.", financialQualityScore: 3, sets: ["job_harbor"] },
+            { id: "q8_the_numbers", label: "Harbor & Finch — it wins once benefits are counted", outcomeNarrative: "You take Harbor & Finch, and you can explain exactly why.", financialQualityScore: 5, sets: ["job_harbor"] },
           ],
         },
       ],
@@ -154,138 +116,105 @@ export const firstJobArc: StoryArc = {
 
     promotion_offer: {
       id: "promotion_offer",
-      title: "Two pulls",
+      title: "A raise or a startup?",
       icon: "rocket",
       isMirrorChoice: true,
       mirrorOf: "job_offer",
       narrative: "",
       choices: [],
+      briefing: {
+        when: "Age 24 · Two years into your job",
+        situation:
+          "You've been at your job two years. In the same week, two things happen: your boss offers a $6,000 raise to stay in the same role, and a 12-person startup offers you a job with a small piece of ownership (equity).",
+        goal: "Weigh a sure thing against a risky one — and use having two offers to your advantage.",
+        terms: [
+          { term: "Equity", meaning: "A small share of a company. Worth a lot if the company succeeds, $0 if it fails." },
+          { term: "Runway", meaning: "How many months a startup can keep paying people before its money runs out." },
+          { term: "Leverage", meaning: "Having another real option, which makes it easier to ask for more." },
+          { term: "Lifestyle creep", meaning: "When your spending rises every time your pay does, so you never get ahead." },
+        ],
+        trend: "Most startups don't survive their first several years, so most startup equity ends up worth little or nothing.",
+      },
+      economy: { paycheck: 5900, payByFlag: { job_meridian: 1000 }, bills: 3900 },
+      consequences: [
+        { id: "promo_tire", text: "Life happens: a flat tire and a cracked phone screen", chance: 0.5, statEffects: { cash: -280 } },
+        { id: "cheap_fix_broke", text: "Because you got the cheap patch job, the car broke down again — the real repair cost", ifAll: ["cheap_fix"], statEffects: { cash: -900, stress: 2 } },
+        { id: "brakes_ignored", text: "Because you ignored the brakes, they wore down and damaged the rotors", ifAll: ["skip_maintenance"], statEffects: { cash: -650, stress: 1 } },
+        { id: "brakes_funded", text: "Because you saved for car costs, the $300 brake job came out of your car fund", ifAll: ["car_fund"], statEffects: { savings: -300 } },
+      ],
       questions: [
         {
           id: "promo_q1_first_look",
           icon: "rocket",
           variants: [
-            { id: "v1", narrative: "A couple of years into that first job — rent handled, the car finally sorted — two pulls land in the same week: a guaranteed raise, or a real bet on a startup. What's the first thing you actually weigh?" },
-            { id: "v2", narrative: "Life's settled into a rhythm since that first offer. Then, out of nowhere: $6,000 more for certain, or equity in something that might not survive. Where does your attention go first?" },
-            { id: "v3", narrative: "You've been at it a while now — first apartment, first car repair, the ordinary stuff of being on your own. Then a raise and a startup offer land the same week. What's the first number you look at?" },
+            { id: "v1", narrative: "Option 1: a $6,000 raise, same job.\nOption 2: a startup job with 1% equity and 8 months of runway.\n\nWhat do you look at first?" },
           ],
           choices: [
-            { id: "p1_raise_amount", label: "The raise amount, since it's the most concrete number on the table.", outcomeNarrative: "It's concrete. It's also not the only number that matters here.", financialQualityScore: 3, statEffects: { savings: -120, stress: 0 } },
-            { id: "p1_discount_equity", label: "What the startup equity could realistically be worth if it succeeds, discounted by how likely that actually is.", outcomeNarrative: "You start with the harder number instead of the easy one, which is exactly the number that needs the most scrutiny.", financialQualityScore: 5, statEffects: { savings: 650, stress: 0 } },
-            { id: "p1_exciting", label: "Whichever offer sounds more exciting to tell people about.", outcomeNarrative: "The startup sounds better at a party. That's not the same as being the better call.", financialQualityScore: 2, statEffects: { savings: -650, stress: 1 } },
+            { id: "p1_raise_amount", label: "The raise — it's the clearest number", outcomeNarrative: "It's clear, but it's only half the comparison.", financialQualityScore: 3 },
+            { id: "p1_discount_equity", label: "What the equity is realistically worth, given the risk", outcomeNarrative: "Smart. 1% of a company that probably fails is worth a lot less than it sounds.", financialQualityScore: 5 },
+            { id: "p1_exciting", label: "Which one sounds cooler", outcomeNarrative: "The startup sounds cooler. That's not a financial reason.", financialQualityScore: 2 },
           ],
         },
         {
           id: "promo_q2_runway",
           icon: "rocket",
-          variants: [
-            { id: "v1", narrative: "Eight months of runway left at the startup, on roughly $40,000 in the bank. Does that number change how you see the offer?" },
-            { id: "v2", narrative: "'Runway' means how long before the money runs out — here, about eight months. Do you find out if that's actually accurate?" },
-            { id: "v3", narrative: "A startup with eight months of cash left is a real risk. Do you size it up?" },
-          ],
+          variants: [{ id: "v1", narrative: "The startup has about 8 months of money left. What do you do with that info?" }],
           choices: [
-            { id: "p2_assume_fine", label: "Assume the founder wouldn't offer you a job if they were about to run out of money.", outcomeNarrative: "That's not really how it works — founders often hire while they're still trying to raise more.", financialQualityScore: 2, statEffects: { savings: -500, stress: 1 } },
-            { id: "p2_note_short", label: "Note that eight months feels short but don't dig into what happens after.", outcomeNarrative: "Eight months feels short because it is. You didn't find out what the plan is for month nine.", financialQualityScore: 3, statEffects: { savings: -90, stress: 0 } },
-            { id: "p2_ask_directly", label: "Ask directly about their next funding round and what happens if it doesn't close.", outcomeNarrative: "The answer tells you more about the real risk than the pitch deck did.", financialQualityScore: 5, statEffects: { savings: 500, stress: 0 } },
+            { id: "p2_assume_fine", label: "Assume they wouldn't hire if they were in trouble", outcomeNarrative: "Startups often hire while still hoping to raise more money.", financialQualityScore: 2, statEffects: { stress: 1 } },
+            { id: "p2_note_short", label: "Note it seems short and move on", outcomeNarrative: "It is short. You don't know their plan for month nine.", financialQualityScore: 3 },
+            { id: "p2_ask_directly", label: "Ask what happens if they can't raise more money", outcomeNarrative: "Their answer tells you how risky this really is.", financialQualityScore: 5 },
           ],
         },
         {
           id: "promo_q3_equity_value",
           icon: "rocket",
-          variants: [
-            { id: "v1", narrative: "Real equity, they said — maybe 1% of a company that could be worth $10M, or could be worth $0. Do you find out which?" },
-            { id: "v2", narrative: "Equity sounds valuable. 1% of $10M is $100,000. 1% of $0 is $0. Is it the first case here, or the second?" },
-            { id: "v3", narrative: "'A real say in what gets built' is part of the pitch. Is the equity percentage part of it real too?" },
-          ],
+          variants: [{ id: "v1", narrative: "They offer \"1% equity.\" What do you ask?" }],
           choices: [
-            { id: "p3_ask_percentage", label: "Ask what percentage you'd actually own and what it would be diluted to after the next funding round.", outcomeNarrative: "A vague 'equity' turns into a specific, evaluable number instead of a nice-sounding word.", financialQualityScore: 5, statEffects: { savings: 500, stress: 0 } },
-            { id: "p3_assume_meaningful", label: "Assume equity at a startup this size is worth something meaningful without checking.", outcomeNarrative: "It might be. 'Might' is a big word to build a decision on.", financialQualityScore: 3, statEffects: { savings: -90, stress: 0 } },
-            { id: "p3_dont_ask", label: "Don't ask, since it feels awkward to grill them on percentages this early.", outcomeNarrative: "It's a fair question to ask before making a career decision. The awkwardness is worth it.", financialQualityScore: 2, statEffects: { savings: -500, stress: 1 } },
+            { id: "p3_ask_percentage", label: "How much I'd own after they raise more money", outcomeNarrative: "Good question. New investors usually shrink your slice.", financialQualityScore: 5 },
+            { id: "p3_assume_meaningful", label: "Nothing — equity is probably worth something", outcomeNarrative: "Maybe. You're guessing.", financialQualityScore: 3 },
+            { id: "p3_dont_ask", label: "Nothing — it feels awkward to ask", outcomeNarrative: "It's a normal question. Not asking leaves you blind.", financialQualityScore: 2 },
           ],
         },
         {
           id: "promo_q4_ceiling",
           icon: "rocket",
-          variants: [
-            { id: "v1", narrative: "The $6,000 raise keeps you in the same role, same ceiling. Does that framing bother you?" },
-            { id: "v2", narrative: "'Same responsibilities, same ceiling,' plus $6,000 — is that a red flag or just an honest description?" },
-            { id: "v3", narrative: "$6,000 more with no real change in what's next. How do you read that?" },
-          ],
+          variants: [{ id: "v1", narrative: "The raise keeps you in the same role with no path up. How do you read that?" }],
           choices: [
-            { id: "p4_face_value", label: "Take it at face value — more money for the same job is still a win.", outcomeNarrative: "It is a win, in the short term. The ceiling part is the part you didn't weigh.", financialQualityScore: 3, statEffects: { savings: -120, stress: 0 } },
-            { id: "p4_ask_manager", label: "Ask your manager directly what it would actually take to move past that ceiling.", outcomeNarrative: "Now you know if the raise is a step toward something, or the whole staircase.", financialQualityScore: 5, statEffects: { savings: 650, stress: 0 } },
-            { id: "p4_assume_moves", label: "Assume the ceiling will probably move on its own eventually.", outcomeNarrative: "Ceilings that move on their own are rare. Usually someone has to ask.", financialQualityScore: 2, statEffects: { savings: -650, stress: 1 } },
+            { id: "p4_face_value", label: "More money is more money", outcomeNarrative: "True for now. You didn't ask about later.", financialQualityScore: 3 },
+            { id: "p4_ask_manager", label: "Ask my boss what it takes to get promoted", outcomeNarrative: "Now you know whether this job has a future.", financialQualityScore: 5 },
+            { id: "p4_assume_moves", label: "Assume a promotion will come eventually", outcomeNarrative: "Promotions rarely just happen. Usually you have to ask.", financialQualityScore: 2 },
           ],
         },
         {
           id: "promo_q5_negotiate",
           icon: "rocket",
-          variants: [
-            { id: "v1", narrative: "Do you try to negotiate either offer, or take one of them as given?" },
-            { id: "v2", narrative: "Neither offer said it was final. Do you push on either one?" },
-            { id: "v3", narrative: "You've got leverage from having two real offers. Do you use it?" },
-          ],
+          variants: [{ id: "v1", narrative: "You decide to stay. Do you use the startup offer to ask for more?" }],
           choices: [
-            { id: "p5_use_leverage", label: "Use the startup offer as real leverage to ask for more than the initial $6,000 raise.", outcomeNarrative: "Having a genuine alternative is exactly when negotiating actually works — they come back at $8,500.", financialQualityScore: 5, statEffects: { savings: 8500, stress: 0 } },
-            { id: "p5_soft_mention", label: "Mention the startup offer vaguely without really pushing for a specific number.", outcomeNarrative: "A soft mention gets you, at best, a soft response — they bump it to $6,800.", financialQualityScore: 3, statEffects: { savings: 6800, stress: 0 } },
-            { id: "p5_no_mention", label: "Take the raise as offered without mentioning the other option at all.", outcomeNarrative: "You had leverage and didn't spend it. The $6,000 lands exactly as offered.", financialQualityScore: 2, statEffects: { savings: 6000, stress: 1 } },
-          ],
-        },
-        {
-          id: "promo_q6_reference_check",
-          icon: "rocket",
-          variants: [
-            { id: "v1", narrative: "Twelve people, roughly $40,000 left in the bank. Do you talk to anyone who's actually worked there before deciding?" },
-            { id: "v2", narrative: "The founder's pitch is one perspective on that $40,000 runway. Do you get a second one?" },
-            { id: "v3", narrative: "Twelve people work there already, watching that same $40,000 tick down. Do you talk to any of them?" },
-          ],
-          choices: [
-            { id: "p6_founders_word", label: "Take the founder's word for how things are going internally.", outcomeNarrative: "Founders are, understandably, the most optimistic person in any room about their own company.", financialQualityScore: 2, statEffects: { savings: -500, stress: 1 } },
-            { id: "p6_look_up_news", label: "Look up the company online for funding news without talking to anyone directly.", outcomeNarrative: "Public information helps. It's not the same as an honest conversation.", financialQualityScore: 3, statEffects: { savings: -90, stress: 0 } },
-            { id: "p6_talk_to_employee", label: "Ask to talk to one of the current employees about what it's actually like day to day.", outcomeNarrative: "You get a perspective the pitch deck was never going to give you.", financialQualityScore: 5, statEffects: { savings: 500, stress: 0 } },
-          ],
-        },
-        {
-          id: "promo_q7_cushion",
-          icon: "rocket",
-          variants: [
-            { id: "v1", narrative: "If the startup folded in eight months, three months of expenses — call it $4,500 — would be the difference between comfortable and scrambling. Do you check you have it?" },
-            { id: "v2", narrative: "Betting on yourself means having a plan if the bet doesn't pay off — roughly $4,500 for three months of runway of your own. Do you make one?" },
-            { id: "v3", narrative: "The risk is real. Do you find out whether $4,500 in savings actually exists, or just the idea of it?" },
-          ],
-          choices: [
-            { id: "p7_figure_it_out", label: "Assume you'd figure it out if it happened.", outcomeNarrative: "You probably would. Figuring it out under pressure costs more than planning ahead does.", financialQualityScore: 3, statEffects: { savings: -90, stress: 0 } },
-            { id: "p7_calculate_months", label: "Calculate how many months of expenses you'd need saved to job-hunt comfortably if it folded.", outcomeNarrative: "Now the risk has an actual size instead of just a feeling.", financialQualityScore: 5, statEffects: { savings: 500, stress: 0 } },
-            { id: "p7_doesnt_matter", label: "Decide the risk doesn't matter since you're young and can always start over.", outcomeNarrative: "You can. Starting over is easier with three months of expenses saved than with none.", financialQualityScore: 2, statEffects: { savings: -500, stress: 1 } },
+            { id: "p5_use_leverage", label: "Yes — tell my boss about it and ask for $8,500", outcomeNarrative: "They agree to $8,500. Every paycheck from now on is bigger.", financialQualityScore: 5, sets: ["raise_big"] },
+            { id: "p5_soft_mention", label: "Mention it, but don't name a number", outcomeNarrative: "They bump it a little, to $6,800.", financialQualityScore: 3, sets: ["raise_mid"] },
+            { id: "p5_no_mention", label: "No — just take the $6,000", outcomeNarrative: "You had leverage and didn't use it. $6,000 it is.", financialQualityScore: 2, statEffects: { stress: 1 }, sets: ["raise_base"] },
           ],
         },
         {
           id: "promo_q8_final_call",
           icon: "rocket",
-          variants: [
-            { id: "v1", narrative: "Decision time. $6,000 guaranteed, or a shot at $100,000+ if the equity actually pays off. What tips it?" },
-            { id: "v2", narrative: "You've gathered what you can. Now you choose between a sure $6,000 and a real chance at nothing. What's the deciding factor?" },
-            { id: "v3", narrative: "Last call on the two pulls — one number is certain, one could be ten times bigger or zero. How do you decide?" },
-          ],
+          variants: [{ id: "v1", narrative: "Looking back at how you made this decision — what drove it?" }],
           choices: [
-            { id: "p8_weigh_and_act", label: "Weigh what you found against your own runway, and either take the leap deliberately or negotiate the raise up.", outcomeNarrative: "Either way, it's a decision you can actually explain, not just one you landed on.", financialQualityScore: 5, statEffects: { savings: 650, stress: 0 } },
-            { id: "p8_feels_safer", label: "Go with whichever option feels safer in the moment without revisiting what you found.", outcomeNarrative: "Safer isn't wrong. It's also not the same as informed.", financialQualityScore: 3, statEffects: { savings: -120, stress: 0 } },
-            { id: "p8_friend_pick", label: "Go with whichever option a friend says they'd pick if it were them.", outcomeNarrative: "It's not them. It's you, with your own numbers.", financialQualityScore: 2, statEffects: { savings: -650, stress: 1 } },
+            { id: "p8_weigh_and_act", label: "What I found out, compared to my own savings", outcomeNarrative: "A decision you can explain. That's the goal.", financialQualityScore: 5 },
+            { id: "p8_feels_safer", label: "Whatever felt safer", outcomeNarrative: "Safe isn't wrong, but it's not the same as informed.", financialQualityScore: 3 },
+            { id: "p8_friend_pick", label: "What a friend said they'd do", outcomeNarrative: "Your friend has different money and different goals.", financialQualityScore: 2 },
           ],
         },
         {
           id: "promo_q9_raise_spending",
           icon: "piggy-bank",
           menuStyle: true,
-          variants: [
-            { id: "v1", narrative: "A few months in, roughly $200 extra is landing in your account every paycheck that didn't used to be there. What do you actually do with it?" },
-            { id: "v2", narrative: "The new number on your paycheck settles in. About $200 a paycheck more than before. Where does it go?" },
-            { id: "v3", narrative: "It's been a few months — the raise is real now, not just a number from an offer letter. An extra $200 a paycheck. What happens to it?" },
-          ],
+          randomEvent: { id: "promo_wedding", chance: 0.3, bannerText: "A friend's wedding: gift, outfit and gas cost you $350.", statEffects: { cash: -350 } },
+          variants: [{ id: "v1", narrative: "Your raise starts next paycheck. What happens to the extra money?" }],
           choices: [
-            { id: "p9_let_it_creep", label: "Let everyday spending drift up to match it — you're not really tracking where the extra goes.", outcomeNarrative: "By month six, the extra $200 has a home. You just can't say where.", financialQualityScore: 2, statEffects: { savings: -20, stress: 1 }, amount: 0, tone: "negative" },
-            { id: "p9_split_it", label: "Split it — a little more breathing room day to day, the rest into savings.", outcomeNarrative: "Some of it disappears into life. Half of it, on purpose, doesn't.", financialQualityScore: 3, statEffects: { savings: 600, stress: 0 }, amount: 600, tone: "neutral" },
-            { id: "p9_bank_it", label: "Route the whole extra $200 into savings automatically before you get used to seeing it in checking.", outcomeNarrative: "You never see the money long enough to miss it — and six months later, it's added up to something real.", financialQualityScore: 5, statEffects: { savings: 1200, stress: 0 }, amount: 1200, tone: "positive" },
+            { id: "p9_let_it_creep", label: "Nothing special — just spend it", outcomeNarrative: "It disappears into takeout and shopping. From now on, you spend more every month.", financialQualityScore: 2, statEffects: { stress: 1 }, amount: 0, tone: "negative", sets: ["lifestyle_creep"] },
+            { id: "p9_split_it", label: "Save half, enjoy half", outcomeNarrative: "From now on, half the raise goes to savings automatically.", financialQualityScore: 3, amount: 350, tone: "neutral", sets: ["raise_half"] },
+            { id: "p9_bank_it", label: "Auto-save all of it", outcomeNarrative: "You never get used to the extra money, so you never miss it. Watch your savings climb.", financialQualityScore: 5, amount: 700, tone: "positive", sets: ["raise_saved"] },
           ],
         },
       ],
@@ -294,32 +223,38 @@ export const firstJobArc: StoryArc = {
 
     ending: {
       id: "ending",
-      title: "Five years out",
+      title: "Age 32",
       icon: "trophy",
       isEnding: true,
-      narrative: "Five years out, your story continues.",
+      narrative: "Ten years after your first job offer.",
       choices: [],
+      consequences: [
+        { id: "end_index", text: "Because you chose an index fund, it kept growing with the market", ifAll: ["index_fund"], statEffects: { savings: 900 } },
+        { id: "end_roth", text: "Because you opened a Roth IRA, it grew tax-free", ifAll: ["roth_ira"], statEffects: { savings: 600 } },
+        { id: "end_margin", text: "Because you borrowed to invest, a market dip forced you to sell at a loss", ifAll: ["margin"], statEffects: { savings: -600, stress: 2 } },
+        { id: "end_held_loser", text: "Because you held the losing stock, it fell another 50%", ifAll: ["held_loser"], statEffects: { savings: -250 } },
+        { id: "end_influencer", text: "Because you followed the influencer's pick, it went to almost zero", ifAll: ["influencer_bet"], statEffects: { savings: -380 } },
+      ],
       endingVariants: [
         {
           id: "high",
           minAvgQualityScore: 4,
-          headline: "You'd retire at 58 with $2.1M",
+          headline: "On track to retire at 58",
           narrative:
-            "Five years out, you own a home you can actually afford, your investments have started compounding in a way that surprises you when you check them, and you've never once had to put an emergency on a credit card.",
+            "Ten years after that first offer, your money works for you. Your savings and investments keep growing, you pay your card in full every month, and surprises don't scare you anymore.",
         },
         {
           id: "mixed",
           minAvgQualityScore: 2.8,
-          headline: "You'd retire at 64 with $890K",
-          narrative:
-            "Five years out, you're doing fine — steady job, decent savings — but you can point to two or three moments where a different call would've put you in a noticeably stronger spot.",
+          headline: "On track to retire at 64",
+          narrative: "You're doing fine — steady income, some savings — but you can point to a few choices that would have put you way ahead.",
         },
         {
           id: "lower",
           minAvgQualityScore: 0,
-          headline: "You'd retire at 68 with $310K",
+          headline: "On track to retire at 68",
           narrative:
-            "Five years out, you're keeping your head above water, but a string of short-term decisions means you're still catching up on debt from things that felt small at the time.",
+            "You're getting by, but small choices added up. Debt and interest still eat part of every paycheck. The good news: it's never too late to change the pattern.",
         },
       ],
     },

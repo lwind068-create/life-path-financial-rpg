@@ -45,6 +45,58 @@ export interface Choice {
  * own nextChapterId there to send the player down a different chapter
  * depending on which one they picked, overriding the chapter-level default.
  */
+/** Flag conditions (see Chapter.consequences / QuestionBeat.showIf). All given lists must pass. */
+export interface FlagCondition {
+  /** Every one of these flags must be set. */
+  ifAll?: string[];
+  /** At least one of these flags must be set. */
+  ifAny?: string[];
+  /** None of these flags may be set. */
+  ifNone?: string[];
+}
+
+/**
+ * A "because you…" result of an earlier choice, applied once when the
+ * chapter that lists it starts (shown on that chapter's briefing).
+ */
+export interface Consequence extends FlagCondition {
+  id: string;
+  /** Plain-English line, e.g. "Because you skipped health insurance, an ER visit cost you". */
+  text: string;
+  /** Optional 0–1 chance (default: always, when the flags match). */
+  chance?: number;
+  statEffects?: Partial<PlayerStats>;
+  /** Flags this consequence turns off (e.g. a payment plan that's now paid off). */
+  clears?: string[];
+  /** Flags this consequence turns on. */
+  sets?: string[];
+}
+
+/** What happens to your money between chapters (paychecks and bills). */
+export interface ChapterEconomy {
+  /** Take-home pay for this stretch of months. */
+  paycheck?: number;
+  /** Extra (or less) pay when a flag is set, e.g. { job_meridian: 800 }. */
+  payByFlag?: Record<string, number>;
+  paycheckLabel?: string;
+  /** Everyday costs for the stretch (food, phone, gas…), not counting rent and recurring costs from flags. */
+  bills?: number;
+  billsLabel?: string;
+}
+
+/** Shown before a chapter starts: what's going on, what to aim for, key terms. */
+export interface ChapterBriefing {
+  /** Time/where you are, e.g. "Age 22 · Two months after graduation". */
+  when: string;
+  /** 2–4 short sentences: who you are and what's happening. */
+  situation: string;
+  /** One sentence: what this chapter is about / what to aim for. */
+  goal: string;
+  terms?: { term: string; meaning: string }[];
+  /** One real-world money fact/trend that connects the chapter to real life. */
+  trend?: string;
+}
+
 export interface QuestionChoice {
   id: string;
   label: string;
@@ -56,6 +108,12 @@ export interface QuestionChoice {
   amount?: number;
   /** Badge color for that amount — positive (banked), negative (spent), neutral (mixed). */
   tone?: "positive" | "negative" | "neutral";
+  /** Flags this choice sets — later chapters react to them (consequences, recurring costs, different questions). */
+  sets?: string[];
+  /** Flags this choice clears. */
+  clears?: string[];
+  /** Money that arrives and goes to card debt first, the rest into savings (e.g. "pay off the card, save the rest"). */
+  debtFirst?: number;
 }
 
 export interface NarrativeVariant {
@@ -69,6 +127,8 @@ export interface TickerConfig {
   symbol: string;
   name: string;
   price: number;
+  /** Optional past prices (oldest first) drawn as a small trend line, e.g. the last 12 months. */
+  history?: number[];
 }
 
 /**
@@ -96,6 +156,10 @@ export interface QuestionBeat {
   menuStyle?: boolean;
   /** Render `choices` (must be exactly 3) as a draggable three-zone slider instead of the default choice-button list. */
   sliderStyle?: boolean;
+  /** Only ask this question when the flag condition holds (cause and effect). Never use on baseline/mirror chapters. */
+  showIf?: FlagCondition;
+  /** Replaces the variant narrative when its condition holds — lets a question refer back to an earlier choice. */
+  narrativeIf?: (FlagCondition & { narrative: string })[];
 }
 
 export interface Chapter {
@@ -126,6 +190,12 @@ export interface Chapter {
   randomEvent?: RandomEvent;
   /** True for the final chapter, which branches on cumulative stats. */
   isEnding?: boolean;
+  /** Briefing screen shown before the chapter's first question. */
+  briefing?: ChapterBriefing;
+  /** Paychecks and bills applied when this chapter starts. */
+  economy?: ChapterEconomy;
+  /** One-time "because you…" results of earlier choices, applied when this chapter starts. */
+  consequences?: Consequence[];
   /**
    * Branching ending narrative, evaluated top-to-bottom; the first variant
    * whose minAvgQualityScore the player's average financialQualityScore
@@ -160,6 +230,8 @@ export interface StoryArc {
 }
 
 export interface DecisionLogEntry {
+  /** Story content version (2 = October 2026 rewrite). Lets research data from different versions be separated. */
+  contentVersion?: number;
   arcId: string;
   chapterId: string;
   choiceId: string;

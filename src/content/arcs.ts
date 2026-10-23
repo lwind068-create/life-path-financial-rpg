@@ -1,14 +1,16 @@
 // The whole game is ONE continuous story — one save slot, one running set
-// of stats, no per-chapter resets. Content is still authored across six
-// files for sanity (one theme each), but they're threaded together here
-// into a single StoryArc via each file's own nextChapterId chain (see the
-// header comment in each content file for that chapter's local details).
+// of stats, no per-chapter resets. Content is authored across six files
+// (one theme each) and threaded together here via each chapter's
+// nextChapterId. Play order:
 //
-// Play order is NOT the same as file order: "The Next Offer" (the
-// promotion/startup mirror scene) is threaded in after Settling In rather
-// than immediately after First Job, so the story moves through getting a
-// job -> building an independent life -> a bigger financial fork, which
-// reads better than two job-shaped decisions back to back.
+//   1 First Job        job_offer (baseline)
+//   2 Settling In      housing_decision, car_repair_decision
+//   3 The Next Offer   promotion_offer (mirror of job_offer)
+//   4 Fine Print       credit_decision, money_traps
+//   5 Business         funding_choice (baseline), pricing_decision, growth_offer (mirror)
+//   6 Running the Show hiring_decision, cashflow_decision
+//   7 The Market       opening_account, trading_floor
+//   -> ending (in firstJobArc.ts)
 import type { StoryArc } from "./types";
 import { firstJobArc } from "./firstJobArc";
 import { settlingInArc } from "./settlingInArc";
@@ -22,10 +24,8 @@ export const lifePathArc: StoryArc = {
   title: "Life-Path",
   blurb: "One continuous story, from your first paycheck to playing the market.",
   startChapterId: "job_offer",
-  // 12 real scenes + the final ending chapter itself = 13, matching the
-  // convention every chapter file already uses (pathLength counts the
-  // ending as one of the notches).
-  pathLength: 13,
+  // 13 scenes + the ending chapter itself (pathLength counts the ending as a notch).
+  pathLength: 14,
   chapters: {
     ...firstJobArc.chapters,
     ...settlingInArc.chapters,
@@ -36,13 +36,13 @@ export const lifePathArc: StoryArc = {
   },
 };
 
-/** Named landmarks for the home-screen roadmap, in actual play order — not file order (see header comment). */
+/** Named landmarks for the home-screen roadmap, in play order (see header comment). */
 export const CHAPTER_MARKERS: { title: string; icon: string; sceneIds: string[] }[] = [
   { title: "First Job", icon: "briefcase", sceneIds: ["job_offer"] },
   { title: "Settling In", icon: "home", sceneIds: ["housing_decision", "car_repair_decision"] },
   { title: "The Next Offer", icon: "rocket", sceneIds: ["promotion_offer"] },
-  { title: "Reading the Fine Print", icon: "credit-card", sceneIds: ["credit_decision", "pricing_decision"] },
-  { title: "Starting a Business", icon: "piggy-bank", sceneIds: ["funding_choice", "growth_offer"] },
+  { title: "Reading the Fine Print", icon: "credit-card", sceneIds: ["credit_decision", "money_traps"] },
+  { title: "Starting a Business", icon: "piggy-bank", sceneIds: ["funding_choice", "pricing_decision", "growth_offer"] },
   { title: "Running the Show", icon: "users", sceneIds: ["hiring_decision", "cashflow_decision"] },
   { title: "Playing the Market", icon: "trending-up", sceneIds: ["opening_account", "trading_floor"] },
 ];
