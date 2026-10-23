@@ -9,6 +9,7 @@ import { ChapterPath } from "../components/ChapterPath";
 import { Leaderboard } from "../components/Leaderboard";
 import { track } from "../engine/analytics";
 import { DailyCard } from "../components/DailyCard";
+import { netWorth } from "../engine/money";
 
 const FEATURES = [
   { Icon: Gamepad2, title: "One continuous story", body: "Chapters flow into each other, real choices throughout." },
@@ -124,7 +125,7 @@ export function Home() {
         <div className="w-full">
           <Leaderboard
             playerName={profile.username || profile.characterName}
-            playerNetWorth={profile.cumulativeStats.savings - profile.cumulativeStats.debt}
+            playerNetWorth={netWorth(profile.cumulativeStats)}
             playerLifePoints={profile.totalLifePointsEarned}
             compact
           />

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { Leaderboard } from "../components/Leaderboard";
+import { netWorth } from "../engine/money";
 
 export function LeaderboardPage() {
   const { profile } = useGame();
@@ -20,7 +21,7 @@ export function LeaderboardPage() {
       </div>
       <Leaderboard
         playerName={profile.username || profile.characterName}
-        playerNetWorth={profile.cumulativeStats.savings - profile.cumulativeStats.debt}
+        playerNetWorth={netWorth(profile.cumulativeStats)}
         playerLifePoints={profile.totalLifePointsEarned}
         size={50}
       />
