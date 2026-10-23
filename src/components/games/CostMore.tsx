@@ -80,7 +80,7 @@ export function CostMore({ onDone }: { onDone: (r: GameResult) => void }) {
       {picked && (
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-bold" style={{ color: picked === answer ? "var(--stat-savings)" : "var(--stat-debt)" }}>
-            {picked === answer ? "Correct! +8" : "Not quite."}
+            {picked === answer ? "Correct! +3" : "Not quite."}
           </span>
           <button type="button" onClick={next} className="rounded-lg px-5 py-2.5 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--accent-ink)" }}>
             {i + 1 >= rounds.length ? "See results" : "Next"}
