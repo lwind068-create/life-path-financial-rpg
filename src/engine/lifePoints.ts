@@ -2,7 +2,7 @@
 // Life Points — a player-facing reward currency. Deliberately kept separate
 // from the hidden `financialQualityScore` research measure in scoring.ts.
 //
-// On the game's two baseline/mirror measurement chapters (flagged via
+// (Historical note) On the game's two baseline/mirror measurement chapters (flagged via
 // Chapter.isBaselineChoice / isMirrorChoice — currently job_offer /
 // promotion_offer and funding_choice / growth_offer), every choice awards
 // the SAME flat number of points no matter which one is picked. That keeps
@@ -13,14 +13,18 @@
 // turned into an ordinary, visible game reward instead of a hidden one.
 // ---------------------------------------------------------------------------
 
-const FLAT_MEASUREMENT_POINTS = 20;
-const BASE_POINTS = 8;
-const QUALITY_MULTIPLIER = 6;
+// Life Points are only for smart moves (score 4–5): 5 for a good move,
+// 10 for the best one, nothing otherwise. The two measurement chapters pay
+// a small flat amount for every option so points never hint at, or reward,
+// a particular answer there.
+const FLAT_MEASUREMENT_POINTS = 3;
 
 /** Points awarded for one choice. `isMeasurementChapter` should be `Boolean(chapter.isBaselineChoice || chapter.isMirrorChoice)`. */
 export function computeLifePoints(financialQualityScore: number, isMeasurementChapter: boolean): number {
   if (isMeasurementChapter) return FLAT_MEASUREMENT_POINTS;
-  return BASE_POINTS + financialQualityScore * QUALITY_MULTIPLIER;
+  if (financialQualityScore >= 5) return 10;
+  if (financialQualityScore >= 4) return 5;
+  return 0;
 }
 
 export interface Rank {
@@ -32,10 +36,10 @@ export interface Rank {
 
 export const RANKS: Rank[] = [
   { id: "rookie", title: "Rookie", threshold: 0 },
-  { id: "saver", title: "Saver", threshold: 150 },
-  { id: "planner", title: "Planner", threshold: 350 },
-  { id: "investor", title: "Investor", threshold: 650 },
-  { id: "mogul", title: "Mogul", threshold: 1000 },
+  { id: "saver", title: "Saver", threshold: 75 },
+  { id: "planner", title: "Planner", threshold: 200 },
+  { id: "investor", title: "Investor", threshold: 400 },
+  { id: "mogul", title: "Mogul", threshold: 700 },
 ];
 
 export function getRank(totalLifePointsEarned: number): Rank {

@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Chapter, PlayerStats, QuestionBeat, RandomEvent } from "../content/types";
-import { lifePathArc } from "../content/arcs";
+import { CHAPTER_MARKERS, lifePathArc } from "../content/arcs";
 import {
   logDecision,
   getDecisionLog,
@@ -20,6 +20,15 @@ import { logEngagement, logPlayerSummary } from "./logPlayerSummary";
 import { publishLeaderboardEntry } from "./leaderboard";
 import { track } from "./analytics";
 import { computeLifePoints } from "./lifePoints";
+import {
+  STARTING_STATS,
+  applyMoney,
+  consequenceApplies,
+  netWorth,
+  runChapterEconomy,
+  type LedgerLine,
+  type MoneyNote,
+} from "./money";
 import {
   addQuestProgress,
   applyBoostToPoints,
@@ -42,7 +51,7 @@ import { ACCENT_OPTIONS, UNLOCKABLE_ACCENTS, UNLOCKABLE_TITLES, UNLOCKABLE_FRAME
 const PROFILE_KEY = "lifepath:profile";
 const PROGRESS_KEY = "lifepath:progress";
 
-const initialStats: PlayerStats = { cash: 0, savings: 0, debt: 0, stress: 0 };
+const initialStats: PlayerStats = { ...STARTING_STATS };
 
 /** Slim shape covering both Choice (single-question chapters) and QuestionChoice (multi-question chapters) — all display/scoring needs, no nextChapterId. */
 interface OutcomeChoice {
@@ -95,6 +104,41 @@ interface StoryProgress {
   visitedChapterIds: string[];
   /** Increments on every choice made without restarting; resets on "Play again." */
   streak: number;
+  /** Story content version this save was made with — older saves restart the story (see loadProgress). */
+  contentVersion: number;
+  /** Flags set by earlier choices (see QuestionChoice.sets) — drive consequences and recurring costs. */
+  flags: string[];
+  /** Consequence ids already applied, so each fires once. */
+  firedConsequences: string[];
+  /** Chapter whose briefing screen is waiting to be shown (null once dismissed). */
+  briefingFor: string | null;
+  /** "Since last chapter" money lines for the current briefing. */
+  ledger: LedgerLine[];
+  /** Money snapshot at the start of each chapter — drives the money-over-time chart. */
+  moneyHistory: { label: string; cash: number; savings: number; debt: number }[];
+}
+
+export const CONTENT_VERSION = 2;
+
+/** True if the question should be asked given the player's flags. */
+function isEligible(q: QuestionBeat | undefined, flags: string[]): boolean {
+  if (!q) return false;
+  return !q.showIf || consequenceApplies(q.showIf, flags);
+}
+
+/** First eligible question index at or after `from`, or -1 if none. */
+function nextEligibleIndex(chapter: Chapter | undefined, from: number, flags: string[]): number {
+  const qs = chapter?.questions ?? [];
+  for (let i = from; i < qs.length; i++) if (isEligible(qs[i], flags)) return i;
+  return -1;
+}
+
+/** Short chart label for a scene: "Ch 2", then "Ch 2b", "Ch 2c" for later scenes in the same chapter. */
+function markerLabel(chapterId: string): string {
+  const m = CHAPTER_MARKERS.findIndex((mk) => mk.sceneIds.includes(chapterId));
+  if (m < 0) return lifePathArc.chapters[chapterId]?.isEnding ? "End" : "";
+  const i = CHAPTER_MARKERS[m].sceneIds.indexOf(chapterId);
+  return `Ch ${m + 1}${i > 0 ? String.fromCharCode(97 + i) : ""}`;
 }
 
 function freshProfile(): PlayerProfile {
@@ -115,14 +159,6 @@ function freshProfile(): PlayerProfile {
   };
 }
 
-function addEffects(base: PlayerStats, effects?: Partial<PlayerStats>): PlayerStats {
-  if (!effects) return base;
-  const next = { ...base };
-  for (const key of Object.keys(effects) as (keyof PlayerStats)[]) {
-    next[key] = (next[key] ?? 0) + (effects[key] ?? 0);
-  }
-  return next;
-}
 
 function loadProfile(): PlayerProfile {
   try {
@@ -142,14 +178,21 @@ function randomIndex(length: number): number {
 
 function freshProgress(): StoryProgress {
   const startChapter = lifePathArc.chapters[lifePathArc.startChapterId];
+  const first = Math.max(0, nextEligibleIndex(startChapter, 0, []));
   return {
     currentChapterId: lifePathArc.startChapterId,
-    currentQuestionIndex: 0,
-    currentVariantIndex: randomIndex(startChapter?.questions?.[0]?.variants.length ?? 1),
+    currentQuestionIndex: first,
+    currentVariantIndex: randomIndex(startChapter?.questions?.[first]?.variants.length ?? 1),
     stats: { ...initialStats },
     statsHistory: [{ ...initialStats }],
     visitedChapterIds: [],
     streak: 0,
+    contentVersion: CONTENT_VERSION,
+    flags: [],
+    firedConsequences: [],
+    briefingFor: startChapter?.briefing ? lifePathArc.startChapterId : null,
+    ledger: [],
+    moneyHistory: [{ label: "Start", cash: initialStats.cash, savings: initialStats.savings, debt: initialStats.debt }],
   };
 }
 
@@ -157,7 +200,14 @@ function loadProgress(): StoryProgress {
   try {
     const raw = window.localStorage.getItem(PROGRESS_KEY);
     if (!raw) return freshProgress();
-    return { ...freshProgress(), ...(JSON.parse(raw) as Partial<StoryProgress>) };
+    const parsed = JSON.parse(raw) as Partial<StoryProgress>;
+    // The story was rewritten (new chapters, money system). Saves from the
+    // old version restart the story; Life Points, username and unlocks stay.
+    if (parsed.contentVersion !== CONTENT_VERSION || !lifePathArc.chapters[parsed.currentChapterId ?? ""]) {
+      clearDecisionLog();
+      return freshProgress();
+    }
+    return { ...freshProgress(), ...parsed };
   } catch {
     return freshProgress();
   }
@@ -175,7 +225,9 @@ interface GameContextValue {
   /** Set on the most recent choice, if its random event fired; cleared on advance. */
   activeRandomEvent: RandomEvent | null;
   /** Set right after a choice is made, so the outcome screen can render it before advancing. */
-  lastOutcome: { choice: OutcomeChoice; statsBefore: PlayerStats; pointsAwarded: number; multiplier: number } | null;
+  lastOutcome: { choice: OutcomeChoice; statsBefore: PlayerStats; pointsAwarded: number; multiplier: number; moneyNotes: MoneyNote[] } | null;
+  /** Hides the chapter briefing and starts its first question. */
+  dismissBriefing: () => void;
   /** Short toasts (quest done, streak, vault interest). Each auto-clears after a few seconds. */
   notices: { id: number; text: string }[];
   dismissNotice: (id: number) => void;
@@ -228,6 +280,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     statsBefore: PlayerStats;
     pointsAwarded: number;
     multiplier: number;
+    moneyNotes: MoneyNote[];
   } | null>(null);
   const [notices, setNotices] = useState<{ id: number; text: string }[]>([]);
   const noticeId = useRef(0);
@@ -278,6 +331,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
   }, [progress]);
 
+  // One save slot: the profile's running stats always mirror the story's.
+  useEffect(() => {
+    const cur = profileRef.current;
+    const s = progress.stats;
+    const c = cur.cumulativeStats;
+    if (c.cash !== s.cash || c.savings !== s.savings || c.debt !== s.debt || c.stress !== s.stress) {
+      commitProfile({ ...cur, cumulativeStats: { ...s } });
+    }
+  }, [progress.stats, commitProfile]);
+
   // Upserts this player's remote summary doc (see logPlayerSummary.ts)
   // after every completed chapter, not just at the ending — so a player
   // who quits partway through still shows up in the aggregate data instead
@@ -294,7 +357,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const avgKnowledgeGain = validGains.length
       ? validGains.reduce((a, b) => a + b, 0) / validGains.length
       : null;
-    const netWorth = progress.stats.savings - progress.stats.debt;
+    const nw = netWorth(progress.stats);
     const currentChapterNode = lifePathArc.chapters[progress.currentChapterId];
     void logPlayerSummary({
       arcId: lifePathArc.id,
@@ -302,18 +365,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
       username: profile.username,
       avgQualityScore,
       avgKnowledgeGain,
-      netWorth,
+      netWorth: nw,
       chaptersCompleted: progress.visitedChapterIds.length,
       completed: Boolean(currentChapterNode?.isEnding),
     });
     void publishLeaderboardEntry({
       username: profile.username,
       // Same figure the on-screen board shows (Home/EndingScreen).
-      netWorth: profile.cumulativeStats.savings - profile.cumulativeStats.debt,
+      netWorth: netWorth(profile.cumulativeStats),
       lifePoints: profile.totalLifePointsEarned,
     });
     track("chapter_completed", { chapters_completed: progress.visitedChapterIds.length });
-    if (currentChapterNode?.isEnding) track("game_completed", { net_worth: netWorth });
+    if (currentChapterNode?.isEnding) track("game_completed", { net_worth: nw });
     // Intentionally keyed only on chapter-completion count — this should
     // fire once per chapter boundary, not on every stat/profile tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -334,12 +397,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const t = window.setTimeout(() => {
       void publishLeaderboardEntry({
         username: profile.username,
-        netWorth: profile.cumulativeStats.savings - profile.cumulativeStats.debt,
+        netWorth: netWorth(profile.cumulativeStats),
         lifePoints: profile.totalLifePointsEarned,
       });
     }, 5000);
     return () => window.clearTimeout(t);
-  }, [profile.username, profile.totalLifePointsEarned, profile.cumulativeStats.savings, profile.cumulativeStats.debt]);
+  }, [profile.username, profile.totalLifePointsEarned, profile.cumulativeStats]);
 
   // Engagement numbers for the stats dashboard (players/{uid}): Life Points,
   // streaks, quests, boosts, Arcade, vault. Debounced to keep writes low.
@@ -397,16 +460,39 @@ export function GameProvider({ children }: { children: ReactNode }) {
       totalLifePointsEarned: cur.totalLifePointsEarned + quest.earned,
     });
     pushNotices(quest.notices);
-    setProgress((p) => ({
-      ...p,
-      currentChapterId: chapterId,
-      currentQuestionIndex: 0,
-      currentVariantIndex: randomIndex(target?.questions?.[0]?.variants.length ?? 1),
-      visitedChapterIds: p.visitedChapterIds.includes(chapterId)
-        ? p.visitedChapterIds
-        : [...p.visitedChapterIds, chapterId],
-    }));
+    setProgress((p) => {
+      // A new chapter = a new stretch of months: paychecks, bills, recurring
+      // costs, interest and "because you…" consequences (engine/money.ts).
+      const runsEconomy = Boolean(target?.economy || target?.consequences || target?.briefing);
+      const econ = runsEconomy
+        ? runChapterEconomy(target!, p.stats, p.flags, p.firedConsequences)
+        : { stats: p.stats, ledger: [] as LedgerLine[], fired: [] as string[], cleared: [] as string[], added: [] as string[], notes: [] };
+      const flags = [...p.flags.filter((f) => !econ.cleared.includes(f)), ...econ.added.filter((f) => !p.flags.includes(f))];
+      const first = Math.max(0, nextEligibleIndex(target, 0, flags));
+      return {
+        ...p,
+        flags,
+        stats: econ.stats,
+        statsHistory: runsEconomy ? [...p.statsHistory, econ.stats] : p.statsHistory,
+        firedConsequences: [...p.firedConsequences, ...econ.fired],
+        ledger: econ.ledger,
+        briefingFor: target?.briefing || target?.isEnding ? chapterId : null,
+        moneyHistory: runsEconomy
+          ? [...p.moneyHistory, { label: markerLabel(chapterId), cash: econ.stats.cash, savings: econ.stats.savings, debt: econ.stats.debt }]
+          : p.moneyHistory,
+        currentChapterId: chapterId,
+        currentQuestionIndex: first,
+        currentVariantIndex: randomIndex(target?.questions?.[first]?.variants.length ?? 1),
+        visitedChapterIds: p.visitedChapterIds.includes(chapterId)
+          ? p.visitedChapterIds
+          : [...p.visitedChapterIds, chapterId],
+      };
+    });
   }, [commitProfile, pushNotices]);
+
+  const dismissBriefing = useCallback(() => {
+    setProgress((p) => ({ ...p, briefingFor: null }));
+  }, []);
 
   const continueFromNarrative = useCallback(() => {
     const next = currentChapter.nextChapterId;
@@ -426,6 +512,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         choiceId: choice.id,
         financialQualityScore: choice.financialQualityScore,
         timestamp: Date.now(),
+        contentVersion: CONTENT_VERSION,
       });
 
       const statsBefore = progress.stats;
@@ -436,7 +523,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
         firedEvent = randomEventSource;
       }
 
-      const statsAfter = addEffects(addEffects(statsBefore, choice.statEffects), firedEvent?.statEffects);
+      // Cash → savings → card waterfall (engine/money.ts), so spending comes
+      // out of checking first, not savings.
+      // "Pay off the card, save the rest": incoming money hits debt first.
+      const debtFirst = (choice as { debtFirst?: number }).debtFirst ?? 0;
+      let effects = choice.statEffects;
+      if (debtFirst > 0) {
+        const toDebt = Math.min(debtFirst, statsBefore.debt);
+        effects = { ...effects, debt: (effects?.debt ?? 0) - toDebt, savings: (effects?.savings ?? 0) + (debtFirst - toDebt) };
+      }
+      const afterChoice = applyMoney(statsBefore, effects);
+      const afterEvent = applyMoney(afterChoice.stats, firedEvent?.statEffects);
+      const statsAfter = afterEvent.stats;
+      const moneyNotes = [...afterChoice.notes, ...afterEvent.notes];
+      const qc = choice as OutcomeChoice & { sets?: string[]; clears?: string[] };
 
       const isMeasurementChapter = Boolean(currentChapter.isBaselineChoice || currentChapter.isMirrorChoice);
       const basePoints = computeLifePoints(choice.financialQualityScore, isMeasurementChapter);
@@ -455,20 +555,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const lifetimeOnly = activity.lifetimeOnly ?? 0;
 
       setActiveRandomEvent(firedEvent);
-      setLastOutcome({ choice, statsBefore, pointsAwarded, multiplier: boosted.multiplier });
+      setLastOutcome({ choice, statsBefore, pointsAwarded, multiplier: boosted.multiplier, moneyNotes });
       setProgress((p) => ({
         ...p,
         stats: statsAfter,
         statsHistory: [...p.statsHistory, statsAfter],
         streak: p.streak + 1,
+        flags: [...p.flags.filter((f) => !(qc.clears ?? []).includes(f)), ...(qc.sets ?? []).filter((f) => !p.flags.includes(f))],
       }));
       commitProfile({
         ...cur,
         boosts: smartQuest.state,
-        cumulativeStats: addEffects(
-          addEffects(cur.cumulativeStats, choice.statEffects),
-          firedEvent?.statEffects,
-        ),
+        cumulativeStats: statsAfter,
         lifePoints: cur.lifePoints + pointsAwarded + bonus,
         totalLifePointsEarned: cur.totalLifePointsEarned + pointsAwarded + bonus + lifetimeOnly,
       });
@@ -632,15 +730,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setActiveRandomEvent(null);
 
     if (currentChapter.questions) {
-      const isLast = progress.currentQuestionIndex >= currentChapter.questions.length - 1;
-      if (isLast) {
-        const next = currentChapter.nextChapterId;
+      const nextIdx = nextEligibleIndex(currentChapter, progress.currentQuestionIndex + 1, progress.flags);
+      if (nextIdx === -1) {
+        // A choice on the last question can send you down a different chapter.
+        const picked = currentChapter.questions[progress.currentQuestionIndex]?.choices.find((c) => c.id === lastOutcome.choice.id);
+        const next = picked?.nextChapterId ?? currentChapter.nextChapterId;
         if (next && next !== "END") goToChapter(next);
       } else {
-        const nextQuestion = currentChapter.questions[progress.currentQuestionIndex + 1];
+        const nextQuestion = currentChapter.questions[nextIdx];
         setProgress((p) => ({
           ...p,
-          currentQuestionIndex: p.currentQuestionIndex + 1,
+          currentQuestionIndex: nextIdx,
           currentVariantIndex: randomIndex(nextQuestion.variants.length),
         }));
       }
@@ -651,13 +751,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const choice = currentChapter.choices.find((c) => c.id === lastOutcome.choice.id);
     const next = choice?.nextChapterId;
     if (next && next !== "END") goToChapter(next);
-  }, [lastOutcome, currentChapter, progress.currentQuestionIndex, goToChapter]);
+  }, [lastOutcome, currentChapter, progress.currentQuestionIndex, progress.flags, goToChapter]);
 
   const resetStoryProgress = useCallback(() => {
     clearDecisionLog();
     window.localStorage.removeItem(PROGRESS_KEY);
     setProgress(freshProgress());
-    setProfile((p) => ({ ...p, cumulativeStats: { ...initialStats } }));
+    setProfile((p) => ({ ...p, cumulativeStats: { ...STARTING_STATS } }));
     setLastOutcome(null);
     setActiveRandomEvent(null);
   }, []);
@@ -690,6 +790,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       continueFromNarrative,
       makeChoice,
       acknowledgeOutcome,
+      dismissBriefing,
       resetStoryProgress,
       resetEverything,
       unlockAccent,
@@ -720,6 +821,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       continueFromNarrative,
       makeChoice,
       acknowledgeOutcome,
+      dismissBriefing,
       resetStoryProgress,
       resetEverything,
       unlockAccent,

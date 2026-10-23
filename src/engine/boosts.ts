@@ -50,40 +50,40 @@ export const BOOSTS: BoostDef[] = [
     name: "2× Points",
     effect: "Double Life Points on your next 5 choices.",
     why: "Rank up faster and climb the leaderboard.",
-    cost: 60,
+    cost: 40,
   },
   {
     id: "triple",
     name: "3× Power Hour",
     effect: "Triple Life Points on your next 3 choices.",
     why: "Best right before a big chapter.",
-    cost: 90,
+    cost: 60,
   },
   {
     id: "freeze",
     name: "Streak Freeze",
     effect: "Saves your daily streak if you miss a day. Hold up to 2.",
     why: "Busy day? Your streak survives.",
-    cost: 50,
+    cost: 30,
   },
   {
     id: "refresh",
     name: "New Quests",
     effect: "Swap today's unfinished quests for new ones.",
     why: "Stuck on a quest you can't finish today?",
-    cost: 25,
+    cost: 15,
   },
 ];
 
 export const MAX_FREEZES = 2;
 export const VAULT_RATE = 0.05;
-export const VAULT_DAILY_CAP = 50;
+export const VAULT_DAILY_CAP = 10;
 
 export const STREAK_MILESTONES: { days: number; reward: number }[] = [
-  { days: 3, reward: 25 },
-  { days: 7, reward: 60 },
-  { days: 14, reward: 120 },
-  { days: 30, reward: 250 },
+  { days: 3, reward: 10 },
+  { days: 7, reward: 25 },
+  { days: 14, reward: 50 },
+  { days: 30, reward: 100 },
 ];
 
 // ---------- quests ----------
@@ -99,19 +99,19 @@ export interface QuestDef {
 }
 
 export const QUEST_POOL: QuestDef[] = [
-  { id: "choices5", label: "Make 5 choices", metric: "choices", target: 5, reward: 25 },
-  { id: "choices10", label: "Make 10 choices", metric: "choices", target: 10, reward: 45 },
-  { id: "smart3", label: "Make 3 smart money moves", metric: "smartChoices", target: 3, reward: 35 },
-  { id: "smart6", label: "Make 6 smart money moves", metric: "smartChoices", target: 6, reward: 60 },
-  { id: "chapter1", label: "Finish a chapter", metric: "chapters", target: 1, reward: 40 },
-  { id: "boost1", label: "Use a boost", metric: "boostUsed", target: 1, reward: 20 },
-  { id: "vault1", label: "Put points in the Savings Vault", metric: "vaultDeposit", target: 1, reward: 20 },
-  { id: "arcade1", label: "Play an Arcade game", metric: "arcade", target: 1, reward: 20 },
-  { id: "arcade3", label: "Play 3 Arcade games", metric: "arcade", target: 3, reward: 45 },
+  { id: "choices5", label: "Make 5 choices", metric: "choices", target: 5, reward: 10 },
+  { id: "choices10", label: "Make 10 choices", metric: "choices", target: 10, reward: 15 },
+  { id: "smart3", label: "Make 3 smart money moves", metric: "smartChoices", target: 3, reward: 15 },
+  { id: "smart6", label: "Make 6 smart money moves", metric: "smartChoices", target: 6, reward: 25 },
+  { id: "chapter1", label: "Finish a chapter", metric: "chapters", target: 1, reward: 15 },
+  { id: "boost1", label: "Use a boost", metric: "boostUsed", target: 1, reward: 5 },
+  { id: "vault1", label: "Put points in the Savings Vault", metric: "vaultDeposit", target: 1, reward: 5 },
+  { id: "arcade1", label: "Play an Arcade game", metric: "arcade", target: 1, reward: 5 },
+  { id: "arcade3", label: "Play 3 Arcade games", metric: "arcade", target: 3, reward: 10 },
 ];
 
 /** Bonus for finishing all three of today's quests. */
-export const ALL_QUESTS_BONUS = 30;
+export const ALL_QUESTS_BONUS = 10;
 
 export interface QuestState {
   id: string;

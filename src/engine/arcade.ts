@@ -28,8 +28,8 @@ export const ARCADE_GAMES: ArcadeGame[] = [
     name: "Portfolio Sim",
     tagline: "Invest $10,000 and fast-forward 10 years.",
     lesson: "Diversifying protects you when the market crashes.",
-    cost: 30,
-    maxReward: 70,
+    cost: 15,
+    maxReward: 25,
     scoreLabel: "Best portfolio",
   },
   {
@@ -37,8 +37,8 @@ export const ARCADE_GAMES: ArcadeGame[] = [
     name: "Need or Want?",
     tagline: "30 seconds. Sort as many expenses as you can.",
     lesson: "Needs come first in every budget.",
-    cost: 20,
-    maxReward: 50,
+    cost: 10,
+    maxReward: 20,
     scoreLabel: "Best score",
   },
   {
@@ -46,8 +46,8 @@ export const ARCADE_GAMES: ArcadeGame[] = [
     name: "Which Costs More?",
     tagline: "Little habits vs. big purchases — 5 rounds.",
     lesson: "Small daily spending adds up fast.",
-    cost: 15,
-    maxReward: 40,
+    cost: 8,
+    maxReward: 15,
     scoreLabel: "Best score",
   },
 ];
@@ -124,25 +124,24 @@ export const SAVINGS_BASELINE = Math.round(START_CASH * Math.pow(1.03, SIM_YEARS
  */
 export function portfolioReward(alloc: Record<AssetId, number>, finalValue: number): { reward: number; notes: string[] } {
   const notes: string[] = [];
-  let reward = 10; // finishing
+  let reward = 2; // finishing
   const held = ASSETS.filter((a) => alloc[a.id] >= START_CASH * 0.1).length;
-  const diversity = Math.min(25, (held - 1) * 9);
+  const diversity = Math.min(9, (held - 1) * 3);
   if (diversity > 0) notes.push(`Diversified across ${held} investments +${diversity}`);
   reward += diversity;
-  const hotShare = alloc.hot / START_CASH;
-  if (hotShare <= 0.2) {
-    reward += 10;
-    notes.push("Kept risky single-stock bets small +10");
+  if (alloc.hot / START_CASH <= 0.2) {
+    reward += 4;
+    notes.push("Kept risky single-stock bets small +4");
   }
   if (finalValue > SAVINGS_BASELINE) {
-    reward += 10;
-    notes.push("Beat a plain savings account +10");
+    reward += 4;
+    notes.push("Beat a plain savings account +4");
   }
   if (finalValue > START_CASH * 1.8) {
-    reward += 15;
-    notes.push("Grew your money 80%+ +15");
+    reward += 6;
+    notes.push("Grew your money 80%+ +6");
   }
-  return { reward: Math.min(70, reward), notes };
+  return { reward: Math.min(25, reward), notes };
 }
 
 // ---------- Need or Want? ----------
@@ -181,8 +180,9 @@ export const BLITZ_ITEMS: BlitzItem[] = [
 
 export const BLITZ_SECONDS = 30;
 
+/** 1 point per correct answer past the first 5, max 20 — you have to be quick AND right. */
 export function blitzReward(score: number): number {
-  return Math.max(0, Math.min(50, score * 3));
+  return Math.max(0, Math.min(20, score - 5));
 }
 
 // ---------- Which Costs More? ----------
@@ -212,7 +212,7 @@ export const COST_ROUNDS: CostRound[] = [
 export const COST_ROUNDS_PER_GAME = 5;
 
 export function costMoreReward(correct: number): number {
-  return correct * 8;
+  return correct * 3;
 }
 
 export function shuffle<T>(arr: T[], rand: () => number = Math.random): T[] {
