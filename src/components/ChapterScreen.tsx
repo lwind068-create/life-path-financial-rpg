@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { CHAPTER_MARKERS } from "../content/arcs";
 import { ChoiceButton } from "./ChoiceButton";
@@ -14,6 +12,8 @@ import { StockTicker } from "./StockTicker";
 import { MathChallenge } from "./MathChallenge";
 import { SpendingMenu } from "./SpendingMenu";
 import { BudgetSlider } from "./BudgetSlider";
+import { ChapterBriefing } from "./ChapterBriefing";
+import { consequenceApplies } from "../engine/money";
 
 function markerIndexForScene(sceneId: string): number {
   return CHAPTER_MARKERS.findIndex((m) => m.sceneIds.includes(sceneId));
@@ -21,7 +21,6 @@ function markerIndexForScene(sceneId: string): number {
 
 export function ChapterScreen() {
   const {
-    arc,
     currentChapter,
     currentQuestion,
     questionProgress,
@@ -33,73 +32,35 @@ export function ChapterScreen() {
     continueFromNarrative,
     makeChoice,
     acknowledgeOutcome,
+    dismissBriefing,
   } = useGame();
-
-  // Shown once per scene, right when a NEW named chapter starts (not the
-  // very first one) — dismissed with a tap, then this scene's first
-  // question shows normally. Tracks the chapterId it was last dismissed
-  // for, so re-rendering the same scene never re-shows it.
-  const [dismissedTransitionFor, setDismissedTransitionFor] = useState<string | null>(null);
 
   const showingOutcome = lastOutcome !== null;
   const markerIndex = markerIndexForScene(currentChapter.id);
-  const isMarkerStart = CHAPTER_MARKERS[markerIndex]?.sceneIds[0] === currentChapter.id;
-  const isVeryFirstScene = currentChapter.id === arc.startChapterId;
-  const showTransition =
-    isMarkerStart &&
-    !isVeryFirstScene &&
-    !currentChapter.isEnding &&
-    progress.currentQuestionIndex === 0 &&
-    !showingOutcome &&
-    dismissedTransitionFor !== currentChapter.id;
+  const marker = CHAPTER_MARKERS[markerIndex];
 
-  if (showTransition) {
-    const prevMarker = CHAPTER_MARKERS[markerIndex - 1];
-    const nextMarker = CHAPTER_MARKERS[markerIndex];
+  // Every chapter opens with a briefing: what's going on, what changed
+  // money-wise since last time (and why), the goal, and key terms.
+  if (progress.briefingFor === currentChapter.id && currentChapter.briefing && !showingOutcome) {
     return (
-      <div className="relative mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center gap-8 px-5 py-16 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="flex w-full flex-col items-center gap-6 rounded-3xl border p-8 shadow-2xl shadow-black/40"
-          style={{ borderColor: "var(--hairline)", background: "var(--bg-panel-solid)" }}
-        >
-          <span className="font-hud text-xs font-semibold uppercase tracking-widest text-[var(--ink-faint)]">
-            End of Chapter {markerIndex} · {prevMarker?.title}
-          </span>
-          <div
-            className="flex h-16 w-16 items-center justify-center rounded-2xl"
-            style={{
-              background: "color-mix(in srgb, var(--accent) 16%, transparent)",
-              boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent)",
-              color: "var(--accent)",
-            }}
-          >
-            <ChapterIcon name={nextMarker.icon} size={30} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="font-display text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
-              Chapter {markerIndex + 1}
-            </span>
-            <h2 className="text-2xl font-bold text-[var(--ink)]">{nextMarker.title}</h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => setDismissedTransitionFor(currentChapter.id)}
-            className="flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-            style={{ background: "var(--accent)", color: "var(--accent-ink)" }}
-          >
-            Continue
-            <ArrowRight size={16} strokeWidth={2.5} />
-          </button>
-        </motion.div>
-      </div>
+      <ChapterBriefing
+        chapter={currentChapter}
+        chapterNumber={markerIndex + 1}
+        chapterTitle={marker?.title ?? currentChapter.title}
+        icon={marker?.icon ?? currentChapter.icon ?? "briefcase"}
+        ledger={progress.ledger}
+        stats={progress.stats}
+        statsHistory={progress.statsHistory}
+        moneyHistory={progress.moneyHistory}
+        onStart={dismissBriefing}
+      />
     );
   }
 
   const activeVariant = currentQuestion?.variants[progress.currentVariantIndex] ?? currentQuestion?.variants[0];
-  const narrative = currentQuestion ? activeVariant?.narrative ?? "" : currentChapter.narrative;
+  // A question can refer back to an earlier choice (QuestionBeat.narrativeIf).
+  const flagNarrative = currentQuestion?.narrativeIf?.find((n) => consequenceApplies(n, progress.flags))?.narrative;
+  const narrative = currentQuestion ? flagNarrative ?? activeVariant?.narrative ?? "" : currentChapter.narrative;
   const choices = currentQuestion ? currentQuestion.choices : currentChapter.choices;
   const icon = currentQuestion?.icon ?? currentChapter.icon;
   const beatKey = currentQuestion ? `${currentChapter.id}-q${progress.currentQuestionIndex}` : currentChapter.id;
@@ -180,6 +141,7 @@ export function ChapterScreen() {
               outcomeTickers={currentQuestion?.outcomeTickers}
               pointsAwarded={lastOutcome.pointsAwarded}
               multiplier={lastOutcome.multiplier}
+              moneyNotes={lastOutcome.moneyNotes}
               onContinue={acknowledgeOutcome}
             />
           )}

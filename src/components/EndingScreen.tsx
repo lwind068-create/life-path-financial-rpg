@@ -8,11 +8,13 @@ import {
   computeAverageQualityScore,
 } from "../engine/scoring";
 import { ShareCard } from "./ShareCard";
+import { MoneyChart } from "./MoneyChart";
 import { StatBar } from "./StatBar";
 import { PlayerBadge } from "./PlayerBadge";
 import { getFrame } from "../content/characterOptions";
 import { Leaderboard } from "./Leaderboard";
 import { track } from "../engine/analytics";
+import { netWorth as calcNetWorth } from "../engine/money";
 
 const SPARKLE_COLORS = ["var(--progress)", "var(--accent)", "var(--progress-glow)"];
 
@@ -53,7 +55,7 @@ export function EndingScreen() {
     visibleAvg !== null
       ? `Money-move score: ${visibleAvg.toFixed(1)} / 5 · ${smartMoves} smart moves`
       : `${smartMoves} smart money moves`;
-  const netWorth = profile.cumulativeStats.savings - profile.cumulativeStats.debt;
+  const netWorth = calcNetWorth(profile.cumulativeStats);
 
   // Remote per-player summary logging (see logPlayerSummary.ts) now happens
   // centrally in GameContext after every chapter — including this one,
@@ -127,6 +129,31 @@ export function EndingScreen() {
           {variant.narrative}
         </p>
         <StatBar stats={progress.stats} history={progress.statsHistory} />
+        {progress.ledger.some((l) => l.because) && (
+          <div className="flex flex-col gap-2 rounded-2xl border p-4" style={{ borderColor: "color-mix(in srgb, var(--progress) 40%, transparent)", background: "color-mix(in srgb, var(--progress) 8%, transparent)" }}>
+            <span className="font-hud text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--progress-glow)" }}>
+              How your choices played out
+            </span>
+            {progress.ledger
+              .filter((l) => l.because)
+              .map((l, i) => (
+                <div key={i} className="flex items-start justify-between gap-3 text-sm">
+                  <span className="text-[var(--ink)]">{l.label}</span>
+                  {l.amount !== 0 && (
+                    <span className="font-hud shrink-0 font-bold" style={{ color: (l.target === "debt" ? l.amount < 0 : l.amount > 0) ? "var(--stat-savings)" : "var(--stat-debt)" }}>
+                      {l.amount > 0 ? "+" : "−"}${Math.abs(l.amount).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              ))}
+          </div>
+        )}
+        {progress.moneyHistory.length >= 2 && (
+          <div className="flex flex-col gap-2 rounded-2xl p-4" style={{ background: "var(--bg-panel-raised)" }}>
+            <span className="font-hud text-[11px] font-bold uppercase tracking-wider text-[var(--ink-dim)]">Your money, start to finish</span>
+            <MoneyChart points={progress.moneyHistory} />
+          </div>
+        )}
       </div>
 
       <div

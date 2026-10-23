@@ -15,6 +15,9 @@ import {
   CloudRain,
   Building2,
   CreditCard,
+  Car,
+  Smartphone,
+  TrendingDown,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,6 +38,9 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "cloud-rain": CloudRain,
   "building-2": Building2,
   "credit-card": CreditCard,
+  car: Car,
+  phone: Smartphone,
+  "trending-down": TrendingDown,
 };
 
 interface ChapterIconProps {

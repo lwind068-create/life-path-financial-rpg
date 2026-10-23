@@ -47,7 +47,7 @@ export function SpendingMenu({ choices, onSelect, disabled }: SpendingMenuProps)
             >
               <Icon size={12} style={{ color }} strokeWidth={2.5} />
               <span className="font-hud text-xs font-bold" style={{ color }}>
-                {choice.amount ? `$${Math.abs(choice.amount).toLocaleString()}` : "$0"}
+                {choice.amount ? `$${Math.abs(choice.amount).toLocaleString(undefined, Number.isInteger(choice.amount) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0"}
               </span>
             </span>
             <span className="font-display flex-1 leading-snug">{choice.label}</span>

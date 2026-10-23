@@ -18,6 +18,8 @@ interface OutcomeAnimationProps {
   pointsAwarded: number;
   /** Active boost multiplier applied to pointsAwarded (1 = no boost). */
   multiplier?: number;
+  /** Plain-English money notes, e.g. "$300 went on your credit card". */
+  moneyNotes?: { text: string; tone: "good" | "bad" | "neutral" }[];
   onContinue: () => void;
 }
 
@@ -29,6 +31,7 @@ export function OutcomeAnimation({
   outcomeTickers,
   pointsAwarded,
   multiplier = 1,
+  moneyNotes = [],
   onContinue,
 }: OutcomeAnimationProps) {
   // Component remounts fresh on every new outcome (see ChapterScreen's
@@ -62,6 +65,7 @@ export function OutcomeAnimation({
         <p className="font-narrative text-base sm:text-lg leading-relaxed text-[var(--ink)]">
           {choice.outcomeNarrative}
         </p>
+        {pointsAwarded > 0 && (
         <motion.span
           key={pointsAwarded}
           initial={{ opacity: 0, y: -6, scale: 0.85 }}
@@ -81,7 +85,22 @@ export function OutcomeAnimation({
             </span>
           )}
         </motion.span>
+        )}
       </div>
+
+      {moneyNotes.map((n) => (
+        <div
+          key={n.text}
+          className="rounded-lg border px-3.5 py-2.5 text-sm font-semibold"
+          style={{
+            borderColor: n.tone === "bad" ? "color-mix(in srgb, var(--stat-debt) 45%, transparent)" : "var(--hairline)",
+            background: n.tone === "bad" ? "color-mix(in srgb, var(--stat-debt) 10%, transparent)" : "var(--bg-panel-raised)",
+            color: n.tone === "bad" ? "var(--stat-debt)" : "var(--ink)",
+          }}
+        >
+          {n.text}
+        </div>
+      ))}
 
       <motion.p
         initial={{ opacity: 0 }}

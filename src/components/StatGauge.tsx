@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { PiggyBank, CreditCard, Activity, type LucideIcon } from "lucide-react";
+import { PiggyBank, CreditCard, Activity, Wallet, type LucideIcon } from "lucide-react";
 import { AnimatedNumber } from "./AnimatedNumber";
 
 interface StatGaugeProps {
-  statKey: "savings" | "debt" | "stress";
+  statKey: "cash" | "savings" | "debt" | "stress";
   value: number;
   history: number[];
 }
@@ -22,14 +22,25 @@ interface StatConfig {
 }
 
 const STAT_CONFIG: Record<StatGaugeProps["statKey"], StatConfig> = {
+  cash: {
+    label: "Cash",
+    Icon: Wallet,
+    color: "#7cc4ff",
+    colorDim: "#bfe1ff",
+    colorVivid: "#5ab4ff",
+    min: 0,
+    max: 12000,
+    prefix: "$",
+    risingIsBad: false,
+  },
   savings: {
     label: "Savings",
     Icon: PiggyBank,
     color: "var(--stat-savings)",
     colorDim: "#8fe8c6",
     colorVivid: "#2fe6a4",
-    min: -1000,
-    max: 2000,
+    min: 0,
+    max: 30000,
     prefix: "$",
     risingIsBad: false,
   },
@@ -40,7 +51,7 @@ const STAT_CONFIG: Record<StatGaugeProps["statKey"], StatConfig> = {
     colorDim: "#ffb3c1",
     colorVivid: "#ff2249",
     min: 0,
-    max: 1200,
+    max: 15000,
     prefix: "$",
     risingIsBad: true,
   },
