@@ -51,11 +51,11 @@ export function applyMoney(stats: PlayerStats, effects: Partial<PlayerStats> | u
   // Debt changes first (borrowing adds cash elsewhere in the same effect; paying down is paired with a cash cost).
   if (effects.debt) s.debt = Math.max(0, s.debt + effects.debt);
 
-  // Savings: deposits add; withdrawals beyond the balance fall through to cash, then the card.
+  // Savings withdrawals first (beyond the balance they fall through to cash, then the card).
+  // Deposits are added AFTER spending below, so money moving cash → savings/investments
+  // never looks like it "came out of savings".
   if (effects.savings) {
-    if (effects.savings >= 0) {
-      s.savings += effects.savings;
-    } else {
+    if (effects.savings < 0) {
       const want = -effects.savings;
       const fromSavings = Math.min(want, Math.max(0, s.savings));
       s.savings -= fromSavings;
@@ -69,6 +69,8 @@ export function applyMoney(stats: PlayerStats, effects: Partial<PlayerStats> | u
     if (effects.cash >= 0) s.cash += effects.cash;
     else spendCash(s, -effects.cash, notes, true);
   }
+
+  if (effects.savings && effects.savings > 0) s.savings += effects.savings;
 
   if (effects.stress) s.stress = clampStress(s.stress + effects.stress);
 
