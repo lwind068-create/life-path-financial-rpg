@@ -86,7 +86,8 @@ export function ChapterBriefing({ chapter, chapterNumber, chapterTitle, icon, le
               <div key={i} className="flex items-start justify-between gap-3 border-b pb-1.5 text-sm" style={{ borderColor: "var(--hairline)" }}>
                 <span className="text-[var(--ink-dim)]">{l.label}</span>
                 <span className="font-hud shrink-0 font-bold" style={{ color: lineColor(l) }}>
-                  {l.target === "debt" ? `+$${Math.round(l.amount).toLocaleString()} (debt)` : `${money(l.amount)}${where(l)}`}
+                  {money(l.amount)}
+                  {where(l)}
                 </span>
               </div>
             ))}
@@ -97,7 +98,7 @@ export function ChapterBriefing({ chapter, chapterNumber, chapterTitle, icon, le
           <div className="flex items-baseline justify-between">
             <span className="font-hud text-[11px] font-bold uppercase tracking-wider text-[var(--ink-dim)]">Your money now</span>
             <span className="text-xs text-[var(--ink-dim)]">
-              Net worth <strong className="text-[var(--ink)]">${netWorth(stats).toLocaleString()}</strong>
+              Net worth <strong className="text-[var(--ink)]">{netWorth(stats) < 0 ? "−" : ""}${Math.abs(netWorth(stats)).toLocaleString()}</strong>
             </span>
           </div>
           <StatBar stats={stats} history={statsHistory} />
