@@ -40,7 +40,7 @@ export const startingBusinessArc: StoryArc = {
       },
       economy: DAY_JOB,
       consequences: [
-        { id: "crypto_crash", text: "Because you bought ZOOMR at the hype, it crashed 80%. You sold what was left", ifAll: ["crypto_bet"], statEffects: { cash: 200, stress: 1 } },
+        { id: "crypto_crash", text: "Because you bought ZOOMR at the hype, it crashed 80% — you sold your $1,000 for just $200", ifAll: ["crypto_bet"], statEffects: { cash: 200, stress: 1 } },
         { id: "furniture_done", text: "Your furniture payment plan is finally paid off", ifAll: ["furniture_plan"], clears: ["furniture_plan"] },
         { id: "bonus_work", text: "Year-end bonus from work", chance: 0.5, statEffects: { cash: 600 } },
       ],
