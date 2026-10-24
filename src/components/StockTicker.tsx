@@ -77,7 +77,7 @@ export function StockTicker({ tickers, mode = "live", label }: StockTickerProps)
           const color = COLORS[i % COLORS.length];
           const first = t.history?.[0];
           const change = first ? ((prices[i] - first) / first) * 100 : null;
-          const up = mode === "settled" && change !== null ? change >= 0 : directions[i];
+          const up = change !== null ? change >= 0 : directions[i];
           return (
             <div
               key={t.symbol}
