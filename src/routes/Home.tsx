@@ -56,7 +56,7 @@ export function Home() {
           Life<span style={{ color: "var(--accent)" }}>-Path</span>
         </h1>
         <p className="max-w-md text-base text-[var(--ink-dim)] sm:text-lg">
-          One life. $0. Every choice changes your future &mdash; how rich do you end up?
+          One life. $0. Every choice changes your future. How rich do you end up?
         </p>
       </motion.div>
 
