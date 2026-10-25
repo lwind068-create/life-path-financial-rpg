@@ -33,12 +33,34 @@ export function EndingScreen() {
 
   const avgScore = useMemo(() => computeAverageQualityScore(decisionLog, arc.id), [decisionLog, arc.id]);
 
+  const finalNetWorth = calcNetWorth(progress.stats);
   const variant = useMemo(() => {
+    // A big exit (startup, company stock, business sale) earns its own headline.
+    if (finalNetWorth >= 1_000_000) {
+      return {
+        id: "millionaire",
+        minAvgQualityScore: 0,
+        headline: `Millionaire by 32 — $${(finalNetWorth / 1_000_000).toFixed(1)}M`,
+        narrative:
+          "Your earlier choices set this up: the savings cushion that let you take a smart risk, and the moves that made the risk worth taking. Plenty of people take the same shot and get $0 — you gave yourself better odds.",
+      };
+    }
     const sorted = [...variants].sort((a, b) => b.minAvgQualityScore - a.minAvgQualityScore);
     return (
       sorted.find((v) => (avgScore ?? 0) >= v.minAvgQualityScore) ?? sorted[sorted.length - 1]
     );
-  }, [variants, avgScore]);
+  }, [variants, avgScore, finalNetWorth]);
+
+  // "If you keep these habits": grow today's net worth plus yearly saving
+  // habits (from flags) at 7% a year from age 32 to 60. An estimate, labeled as one.
+  const projection = useMemo(() => {
+    const perStretch: Record<string, number> = { auto_save: 400, raise_saved: 700, raise_half: 350, roth_ira: 200, index_auto: 150, job_harbor: 290, espp_buy: 450, biz_cushion: 150 };
+    const yearly = progress.flags.reduce((sum, f) => sum + (perStretch[f] ?? 0) * 6, 0);
+    const years = 28;
+    const growth = Math.pow(1.07, years);
+    const value = Math.max(0, finalNetWorth) * growth + yearly * ((growth - 1) / 0.07);
+    return { yearly, value: Math.round(value / 1000) * 1000 };
+  }, [progress.flags, finalNetWorth]);
 
   // Real numbers only — no invented comparison to other players. The two
   // baseline/mirror measurement chapters are left out, matching how Life
@@ -128,6 +150,15 @@ export function EndingScreen() {
         <p className="font-narrative text-base sm:text-lg leading-relaxed text-[var(--ink)]">
           {variant.narrative}
         </p>
+        <div className="rounded-2xl border p-4" style={{ borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
+          <span className="font-hud text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">If you keep these habits until 60</span>
+          <p className="mt-1 text-2xl font-extrabold text-[var(--ink)]">≈ ${projection.value.toLocaleString()}</p>
+          <p className="text-xs leading-relaxed text-[var(--ink-dim)]">
+            {projection.yearly > 0
+              ? `Your saving habits put away about $${projection.yearly.toLocaleString()} a year. Estimate assumes 7% average yearly growth — real returns go up and down.`
+              : "You didn't set up any automatic saving or investing. Even $200 a month from age 32 could grow to about $230,000 by 60 at 7% a year."}
+          </p>
+        </div>
         <StatBar stats={progress.stats} history={progress.statsHistory} />
         {progress.ledger.some((l) => l.because) && (
           <div className="flex flex-col gap-2 rounded-2xl border p-4" style={{ borderColor: "color-mix(in srgb, var(--progress) 40%, transparent)", background: "color-mix(in srgb, var(--progress) 8%, transparent)" }}>
