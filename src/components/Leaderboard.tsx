@@ -84,9 +84,13 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
 
   const limit = compact ? 3 : size;
   let visible = rows.slice(0, limit);
-  if (!visible.some((r) => r.isPlayer)) {
+  // Full board is strictly the top `size` players. Only the small Home/Ending
+  // version pins the player's own row so they can see where they stand.
+  const playerOffBoard = !visible.some((r) => r.isPlayer);
+  if (compact && playerOffBoard) {
     visible = [...visible.slice(0, limit - 1), rows.find((r) => r.isPlayer)!];
   }
+  const cutoff = visible.length ? visible[visible.length - 1].value : 0;
 
   const boardUnavailable = loaded && entries === null;
   const onlyYou = loaded && others.length === 0;
@@ -160,6 +164,14 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
           );
         })}
       </div>
+      {!compact && playerOffBoard && !boardUnavailable && (
+        <p className="text-left text-xs font-semibold" style={{ color: "var(--accent)" }}>
+          You're not in the top {size} yet —{" "}
+          {metric === "netWorth"
+            ? `reach $${(cutoff + 1).toLocaleString()} net worth to get on the board.`
+            : `${(cutoff - playerValue + 1).toLocaleString()} more Life Points gets you on the board.`}
+        </p>
+      )}
       {(onlyYou || boardUnavailable) && (
         <p className="text-left text-[11px] leading-relaxed text-[var(--ink-faint)]">
           {boardUnavailable
