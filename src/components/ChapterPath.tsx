@@ -16,7 +16,7 @@ interface ChapterPathProps {
   currentIndex: number;
   hasCharacter: boolean;
   isDone: boolean;
-  /** "Start" | "Continue" | "Play again" — same label already shown on the main CTA. */
+  /** "Start" | "Continue" | "Play again" - same label already shown on the main CTA. */
   ctaLabel: string;
   onActivate: () => void;
 }

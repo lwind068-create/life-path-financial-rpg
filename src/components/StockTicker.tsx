@@ -13,7 +13,7 @@ const COLORS = [
 
 interface StockTickerProps {
   tickers: TickerConfig[];
-  /** "live" jitters every couple seconds, purely for flavor. "settled" holds still — used on the outcome reveal. */
+  /** "live" jitters every couple seconds, purely for flavor. "settled" holds still - used on the outcome reveal. */
   mode?: "live" | "settled";
   label?: string;
 }
@@ -37,7 +37,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
 /**
  * A small trading-floor board. In "live" mode the displayed prices jitter
  * within a tight band every ~1.4s for a "the market never sits still"
- * feel — this motion is cosmetic and never tied to which choice the player
+ * feel - this motion is cosmetic and never tied to which choice the player
  * picked. In "settled" mode it just renders the given prices once, used to
  * show the "months later" reveal on the outcome screen.
  */

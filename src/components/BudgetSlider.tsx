@@ -7,14 +7,14 @@ interface SliderChoiceLike {
 }
 
 interface BudgetSliderProps {
-  /** Exactly 3, left-to-right zones on the track. Position is cosmetic-random per question (see content headers) — never tied to which one is "best." */
+  /** Exactly 3, left-to-right zones on the track. Position is cosmetic-random per question (see content headers) - never tied to which one is "best." */
   choices: SliderChoiceLike[];
   onSelect: (choiceId: string) => void;
 }
 
 const ZONE_COLORS = ["#38bdf8", "#c084fc", "#fbbf24"];
 
-/** A draggable three-zone slider — a different physical gesture than tapping a card, used for a handful of "where does this money go" questions. Still resolves to one of the normal three choices underneath. */
+/** A draggable three-zone slider - a different physical gesture than tapping a card, used for a handful of "where does this money go" questions. Still resolves to one of the normal three choices underneath. */
 export function BudgetSlider({ choices, onSelect }: BudgetSliderProps) {
   const [value, setValue] = useState(50);
   const [locked, setLocked] = useState(false);

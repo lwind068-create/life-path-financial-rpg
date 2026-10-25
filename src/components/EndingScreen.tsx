@@ -40,9 +40,9 @@ export function EndingScreen() {
       return {
         id: "millionaire",
         minAvgQualityScore: 0,
-        headline: `Millionaire by 32 — $${(finalNetWorth / 1_000_000).toFixed(1)}M`,
+        headline: `Millionaire by 32: $${(finalNetWorth / 1_000_000).toFixed(1)}M`,
         narrative:
-          "Your earlier choices set this up: the savings cushion that let you take a smart risk, and the moves that made the risk worth taking. Plenty of people take the same shot and get $0 — you gave yourself better odds.",
+          "Your earlier choices set this up: the savings cushion that let you take a smart risk, and the moves that made the risk worth taking. Plenty of people take the same shot and get $0. You gave yourself better odds.",
       };
     }
     const sorted = [...variants].sort((a, b) => b.minAvgQualityScore - a.minAvgQualityScore);
@@ -62,7 +62,7 @@ export function EndingScreen() {
     return { yearly, value: Math.round(value / 1000) * 1000 };
   }, [progress.flags, finalNetWorth]);
 
-  // Real numbers only — no invented comparison to other players. The two
+  // Real numbers only - no invented comparison to other players. The two
   // baseline/mirror measurement chapters are left out, matching how Life
   // Points treat them, so the card never hints at how those are scored.
   const visibleDecisions = decisionLog.filter((d) => {
@@ -80,7 +80,7 @@ export function EndingScreen() {
   const netWorth = calcNetWorth(profile.cumulativeStats);
 
   // Remote per-player summary logging (see logPlayerSummary.ts) now happens
-  // centrally in GameContext after every chapter — including this one,
+  // centrally in GameContext after every chapter - including this one,
   // since reaching the ending is itself just "the last chapter completed."
   // Nothing to trigger from here.
 
@@ -109,7 +109,7 @@ export function EndingScreen() {
         await navigator.share({
           files: [file],
           title: "My Life-Path",
-          text: `${variant?.headline ?? "My Life-Path"} — play yours free at lifepathgame.org`,
+          text: `${variant?.headline ?? "My Life-Path"}. Play yours free at lifepathgame.org`,
         });
         return;
       }
@@ -143,7 +143,7 @@ export function EndingScreen() {
             className="font-display text-xs font-semibold uppercase tracking-widest"
             style={{ color: "var(--accent)" }}
           >
-            {profile.characterName || "Your"}'s story — where it lands
+            {profile.characterName || "Your"}'s story: where it lands
           </span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[var(--ink)]">{variant.headline}</h1>
@@ -155,7 +155,7 @@ export function EndingScreen() {
           <p className="mt-1 text-2xl font-extrabold text-[var(--ink)]">≈ ${projection.value.toLocaleString()}</p>
           <p className="text-xs leading-relaxed text-[var(--ink-dim)]">
             {projection.yearly > 0
-              ? `Your saving habits put away about $${projection.yearly.toLocaleString()} a year. Estimate assumes 7% average yearly growth — real returns go up and down.`
+              ? `Your saving habits put away about $${projection.yearly.toLocaleString()} a year. Estimate assumes 7% average yearly growth. Real returns go up and down.`
               : "You didn't set up any automatic saving or investing. Even $200 a month from age 32 could grow to about $230,000 by 60 at 7% a year."}
           </p>
         </div>

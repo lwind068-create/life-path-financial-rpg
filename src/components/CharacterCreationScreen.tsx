@@ -4,10 +4,10 @@ import { useGame } from "../engine/GameContext";
 import { ColorPicker } from "./ColorPicker";
 
 /**
- * Shown once, before the player's first arc — regardless of which arc they
+ * Shown once, before the player's first arc - regardless of which arc they
  * picked. What it sets (name + color) lives on the profile, not on any one
  * arc's progress, so it carries into every arc after this. There's no
- * avatar/face step — identity in this game is just a name and a color.
+ * avatar/face step - identity in this game is just a name and a color.
  */
 export function CharacterCreationScreen() {
   const { profile, setCharacterName, setAccentId, completeOnboarding } = useGame();

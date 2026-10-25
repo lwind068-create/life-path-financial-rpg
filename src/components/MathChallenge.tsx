@@ -10,7 +10,7 @@ interface MathChallengeProps {
 
 /**
  * Optional quick-math prompt. Never gates progress or affects scoring.
- * A wrong answer says "try again" — the right answer only appears if the
+ * A wrong answer says "try again" - the right answer only appears if the
  * player taps "Show answer". "Skip" hides the whole box.
  */
 export function MathChallenge({ prompt, answer, unit = "" }: MathChallengeProps) {
@@ -85,7 +85,7 @@ export function MathChallenge({ prompt, answer, unit = "" }: MathChallengeProps)
             className="flex flex-wrap items-center gap-3 text-xs font-semibold"
           >
             <span className="flex items-center gap-1" style={{ color: "var(--stat-debt)" }}>
-              <X size={14} strokeWidth={2.5} /> Not quite — try again.
+              <X size={14} strokeWidth={2.5} /> Not quite, try again.
             </span>
             <button
               type="button"
@@ -104,7 +104,7 @@ export function MathChallenge({ prompt, answer, unit = "" }: MathChallengeProps)
             className="flex items-center gap-1 text-xs font-semibold"
             style={{ color: "var(--stat-savings)" }}
           >
-            <Check size={14} strokeWidth={2.5} /> Nailed it — {unit}
+            <Check size={14} strokeWidth={2.5} /> Nailed it: {unit}
             {answer.toLocaleString()}.
           </motion.span>
         )}

@@ -4,7 +4,7 @@ import type { Frame } from "../content/characterOptions";
 interface PlayerBadgeProps {
   name: string;
   size?: "sm" | "md" | "lg";
-  /** Optional purchased badge frame — a decorative ring/glow layered on top of the accent ring. */
+  /** Optional purchased badge frame - a decorative ring/glow layered on top of the accent ring. */
   frame?: Frame;
 }
 

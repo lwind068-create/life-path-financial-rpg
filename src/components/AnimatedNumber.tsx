@@ -9,7 +9,7 @@ interface AnimatedNumberProps {
 }
 
 /**
- * Count-up/count-down number ticker — the "number moving" dopamine hook
+ * Count-up/count-down number ticker - the "number moving" dopamine hook
  * used on every stat change. Pure CSS/rAF, no backend involved.
  */
 export function AnimatedNumber({

@@ -7,7 +7,7 @@ import { StatBar } from "./StatBar";
 import { StockTicker } from "./StockTicker";
 
 interface OutcomeAnimationProps {
-  /** Choice or QuestionChoice — only `outcomeNarrative`/`financialQualityScore` are used here. */
+  /** Choice or QuestionChoice - only `outcomeNarrative`/`financialQualityScore` are used here. */
   choice: { outcomeNarrative: string; financialQualityScore: number };
   statsAfter: PlayerStats;
   statsHistory: PlayerStats[];
@@ -117,7 +117,7 @@ export function OutcomeAnimation({
         </motion.div>
       )}
 
-      {/* Live stat panel — the numbers visibly ticking is the reward moment. */}
+      {/* Live stat panel - the numbers visibly ticking is the reward moment. */}
       <StatBar stats={statsAfter} history={statsHistory} />
 
       <button

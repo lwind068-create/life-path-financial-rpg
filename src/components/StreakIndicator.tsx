@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Flame } from "lucide-react";
 
 interface StreakIndicatorProps {
-  /** How many scene-to-scene transitions have happened — also the 0-based index of the current scene. */
+  /** How many scene-to-scene transitions have happened - also the 0-based index of the current scene. */
   visitedCount: number;
   totalCount: number;
   streak: number;
@@ -10,7 +10,7 @@ interface StreakIndicatorProps {
   withinScenePct?: number;
 }
 
-/** Level tracker — chapter notches along a bar, filled by a smoothly-advancing gradient. */
+/** Level tracker - chapter notches along a bar, filled by a smoothly-advancing gradient. */
 export function StreakIndicator({ visitedCount, totalCount, streak, withinScenePct = 0 }: StreakIndicatorProps) {
   const segments = Math.max(1, totalCount - 1);
   const sceneIndex = visitedCount;

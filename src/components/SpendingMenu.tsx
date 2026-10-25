@@ -22,7 +22,7 @@ const TONE_COLOR: Record<string, string> = {
 };
 const TONE_ICON = { positive: ArrowUpRight, negative: ArrowDownRight, neutral: Minus };
 
-/** A visual spending menu — price + pos/neg badge per card — used for questions flagged `menuStyle`. Still resolves to a normal choice under the hood. */
+/** A visual spending menu - price + pos/neg badge per card - used for questions flagged `menuStyle`. Still resolves to a normal choice under the hood. */
 export function SpendingMenu({ choices, onSelect, disabled }: SpendingMenuProps) {
   return (
     <div className="flex flex-col gap-3">

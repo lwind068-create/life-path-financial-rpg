@@ -26,7 +26,7 @@ interface Row {
 }
 
 /**
- * Real players only — read from Firestore scores/{uid} (see
+ * Real players only - read from Firestore scores/{uid} (see
  * engine/leaderboard.ts). Names are unique usernames. The player's own row
  * always uses their live local numbers. If the board can't be loaded, only
  * the player's own row is shown: no made-up rivals.
@@ -166,16 +166,16 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
       </div>
       {!compact && playerOffBoard && !boardUnavailable && (
         <p className="text-left text-xs font-semibold" style={{ color: "var(--accent)" }}>
-          You're not in the top {size} yet —{" "}
+          You're not in the top {size} yet.{" "}
           {metric === "netWorth"
-            ? `reach $${(cutoff + 1).toLocaleString()} net worth to get on the board.`
+            ? `Reach $${(cutoff + 1).toLocaleString()} net worth to get on the board.`
             : `${(cutoff - playerValue + 1).toLocaleString()} more Life Points gets you on the board.`}
         </p>
       )}
       {(onlyYou || boardUnavailable) && (
         <p className="text-left text-[11px] leading-relaxed text-[var(--ink-faint)]">
           {boardUnavailable
-            ? "Couldn't load other players right now — your score is saved on this device."
+            ? "Couldn't load other players right now. Your score is saved on this device."
             : "No one else on the board yet. Share lifepathgame.org and see who beats you."}
         </p>
       )}
@@ -183,7 +183,7 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
         <p className="text-left text-[11px] leading-relaxed text-[var(--ink-faint)]">
           {metric === "netWorth"
             ? "Real players, ranked by their best net worth (savings minus debt) in any run."
-            : "Real players, ranked by lifetime Life Points earned — story, quests and Arcade all count. Spending never lowers your spot."}
+            : "Real players, ranked by lifetime Life Points earned. Story, quests and Arcade all count. Spending never lowers your spot."}
         </p>
       )}
       {compact && (

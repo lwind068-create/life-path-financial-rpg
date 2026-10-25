@@ -47,7 +47,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           {socialProofLine}
         </div>
 
-        <span className="text-xs text-white/60">Play your own path — lifepathgame.org</span>
+        <span className="text-xs text-white/60">Play your own path: lifepathgame.org</span>
       </div>
     );
   },

@@ -64,7 +64,7 @@ export function UsernameScreen() {
         <h1 className="text-3xl font-extrabold text-[var(--ink)]">
           Welcome to Life<span style={{ color: "var(--accent)" }}>-Path</span>
         </h1>
-        <p className="text-sm text-[var(--ink-dim)]">Pick a username. It's yours alone — it shows on the leaderboard.</p>
+        <p className="text-sm text-[var(--ink-dim)]">Pick a username. It's yours alone and shows on the leaderboard.</p>
       </motion.div>
 
       <form
@@ -104,7 +104,7 @@ export function UsernameScreen() {
           Claim username
         </button>
         <p className="text-center text-[11px] leading-relaxed text-[var(--ink-faint)]">
-          Don't use your real name. By playing you agree to how we use game data — see our{" "}
+          Don't use your real name. By playing you agree to how we use game data. See our{" "}
           <Link to="/privacy" className="underline">privacy note</Link>.
         </p>
       </form>

@@ -2,21 +2,21 @@ import { motion } from "framer-motion";
 import type { CSSProperties } from "react";
 
 interface ChoiceButtonProps {
-  /** Choice or QuestionChoice — only `id`/`label` are used here. */
+  /** Choice or QuestionChoice - only `id`/`label` are used here. */
   choice: { id: string; label: string };
   index: number;
   onSelect: (choiceId: string) => void;
   disabled?: boolean;
 }
 
-// Purely cosmetic, index-based — cycles the same 3 hues in the same order
+// Purely cosmetic, index-based - cycles the same 3 hues in the same order
 // on every choice screen, unrelated to financialQualityScore. Never let
 // this rotation correlate with quality: it would leak the "right answer."
 const SLOT_COLORS = ["#38bdf8", "#c084fc", "#fbbf24"];
 const SLOT_LETTERS = ["A", "B", "C"];
 
 // Note: financialQualityScore intentionally never touches this component's
-// rendering — the player sees only the label, in a neutral, unranked list.
+// rendering - the player sees only the label, in a neutral, unranked list.
 export function ChoiceButton({ choice, index, onSelect, disabled }: ChoiceButtonProps) {
   const slot = SLOT_COLORS[index % SLOT_COLORS.length];
   const letter = SLOT_LETTERS[index % SLOT_LETTERS.length];

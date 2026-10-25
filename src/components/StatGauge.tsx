@@ -17,7 +17,7 @@ interface StatConfig {
   min: number;
   max: number;
   prefix: string;
-  /** Higher raw value reads as "worse" (debt, stress) vs "better" (savings) — flips the intensity ramp. */
+  /** Higher raw value reads as "worse" (debt, stress) vs "better" (savings) - flips the intensity ramp. */
   risingIsBad: boolean;
 }
 

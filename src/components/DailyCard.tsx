@@ -3,7 +3,7 @@ import { Flame, Shield, ShoppingBag, Target, Zap } from "lucide-react";
 import { useGame } from "../engine/GameContext";
 import { dayKey, streakIsAlive } from "../engine/boosts";
 
-/** Home-screen summary: streak, today's quests, active boost — and the way into the shop. */
+/** Home-screen summary: streak, today's quests, active boost - and the way into the shop. */
 export function DailyCard() {
   const { profile } = useGame();
   const b = profile.boosts;
