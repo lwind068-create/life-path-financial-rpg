@@ -24,7 +24,7 @@ const BOOST_ICONS: Record<BoostId, typeof Zap> = {
 };
 
 const ERROR_TEXT: Record<BuyError, string> = {
-  cant_afford: "Not enough Life Points yet — make some smart choices first.",
+  cant_afford: "Not enough Life Points yet. Make some smart choices first.",
   already_active: "You already have a points boost running. Use it up first.",
   max_freezes: `You can hold up to ${MAX_FREEZES} Streak Freezes.`,
   nothing_to_refresh: "All of today's quests are already done!",
@@ -111,7 +111,7 @@ export function Shop() {
             </div>
             <div className="flex flex-col items-center gap-0.5 rounded-2xl px-2 py-3" style={{ background: "var(--bg-panel-raised)" }}>
               <span className="font-hud text-lg font-bold" style={{ color: b.activeBoost ? "var(--progress-glow)" : "var(--ink-faint)" }}>
-                {b.activeBoost ? `${b.activeBoost.multiplier}×` : "—"}
+                {b.activeBoost ? `${b.activeBoost.multiplier}×` : "-"}
               </span>
               <span className="text-[10px] uppercase tracking-wide text-[var(--ink-faint)]">
                 {b.activeBoost ? `${b.activeBoost.choicesLeft} choices left` : "No boost"}
@@ -165,7 +165,7 @@ export function Shop() {
         </div>
         <p className="text-xs text-[var(--ink-faint)]">
           {b.allQuestsBonusClaimed
-            ? "All done for today — new quests tomorrow."
+            ? "All done for today, new quests tomorrow."
             : `Finish all three for a +${ALL_QUESTS_BONUS} bonus. New quests every day.`}
         </p>
       </Panel>
@@ -231,7 +231,7 @@ export function Shop() {
         <SectionTitle icon={Landmark}>Savings Vault</SectionTitle>
         <p className="text-sm leading-relaxed text-[var(--ink-dim)]">
           Park Life Points here and they earn <strong className="text-[var(--ink)]">{Math.round(VAULT_RATE * 100)}% interest</strong> every
-          day you play (up to {VAULT_DAILY_CAP} a day). Interest earns interest too — that's compound interest, the same thing that grows
+          day you play (up to {VAULT_DAILY_CAP} a day). Interest earns interest too: that's compound interest, the same thing that grows
           real savings.
         </p>
         <div className="flex items-center justify-between rounded-2xl px-4 py-3" style={{ background: "var(--bg-panel-raised)" }}>

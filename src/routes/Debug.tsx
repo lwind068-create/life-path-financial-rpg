@@ -1,6 +1,6 @@
 // Unlisted, dev-only decision log viewer. Never linked from player-facing
 // UI. This is where the raw data behind the embedded assessment (see
-// engine/scoring.ts for the ethical framing) is inspectable in full —
+// engine/scoring.ts for the ethical framing) is inspectable in full -
 // nothing collected here is hidden from oversight, it's just not surfaced
 // mid-game to the player.
 import { useState } from "react";
@@ -43,12 +43,12 @@ export function Debug() {
         <h2 className="font-semibold text-emerald-400">Knowledge gain (life_path)</h2>
         {gainResults.map((r) => (
           <div key={r.baselineChapterId} className="rounded border border-white/10 p-3">
-            <div>baseline ({r.baselineChapterId}): {r.baselineScore ?? "—"}</div>
-            <div>mirror ({r.mirrorChapterId}): {r.mirrorScore ?? "—"}</div>
-            <div>gain: {r.gain ?? "—"}</div>
+            <div>baseline ({r.baselineChapterId}): {r.baselineScore ?? "-"}</div>
+            <div>mirror ({r.mirrorChapterId}): {r.mirrorScore ?? "-"}</div>
+            <div>gain: {r.gain ?? "-"}</div>
           </div>
         ))}
-        <div>average quality score across whole story: {avgScore ?? "—"}</div>
+        <div>average quality score across whole story: {avgScore ?? "-"}</div>
       </section>
 
       <section className="flex flex-col gap-2">

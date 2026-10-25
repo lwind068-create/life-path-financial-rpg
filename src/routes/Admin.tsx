@@ -1,5 +1,5 @@
 // Private stats dashboard. Readable only by the verified admin emails in
-// engine/account.ts — firestore.rules enforces the same list server-side,
+// engine/account.ts - firestore.rules enforces the same list server-side,
 // so this page shows nothing to anyone else even if they find the URL.
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -258,13 +258,13 @@ export function Admin() {
                 <Tile label="Players" value={String(stats.players)} note={usernameCount !== null ? `${usernameCount} on the leaderboard` : undefined} />
                 <Tile label="Finished the story" value={String(stats.finished)} />
                 <Tile label="Completion rate" value={`${stats.rate.toFixed(0)}%`} />
-                <Tile label="Avg knowledge gain" value={stats.gain === null ? "—" : stats.gain.toFixed(2)} note={`baseline → mirror, n=${stats.gainN}`} />
-                <Tile label="Avg decision quality" value={stats.quality === null ? "—" : `${stats.quality.toFixed(2)} / 5`} />
+                <Tile label="Avg knowledge gain" value={stats.gain === null ? "-" : stats.gain.toFixed(2)} note={`baseline → mirror, n=${stats.gainN}`} />
+                <Tile label="Avg decision quality" value={stats.quality === null ? "-" : `${stats.quality.toFixed(2)} / 5`} />
               </div>
 
               <h2 className="mt-2 text-sm font-bold uppercase tracking-wide text-[var(--ink-dim)]">Engagement</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Tile label="Avg Life Points earned" value={stats.engaged.avgLp === null ? "—" : Math.round(stats.engaged.avgLp).toLocaleString()} />
+                <Tile label="Avg Life Points earned" value={stats.engaged.avgLp === null ? "-" : Math.round(stats.engaged.avgLp).toLocaleString()} />
                 <Tile label="Came back another day" value={String(stats.engaged.returning)} note={stats.engaged.avgDays === null ? undefined : `avg ${stats.engaged.avgDays.toFixed(1)} days played`} />
                 <Tile label="3+ day streaks" value={String(stats.engaged.streak3)} />
                 <Tile label="Quests completed" value={stats.engaged.quests.toLocaleString()} />
@@ -291,7 +291,7 @@ export function Admin() {
                         <td className="py-2 text-right font-hud">{g.plays}</td>
                         <td className="py-2 text-right font-hud">{g.players}</td>
                         <td className="py-2 text-right font-hud">
-                          {g.avgBest === null ? "—" : g.id === "portfolio" ? `$${Math.round(g.avgBest).toLocaleString()}` : g.avgBest.toFixed(1)}
+                          {g.avgBest === null ? "-" : g.id === "portfolio" ? `$${Math.round(g.avgBest).toLocaleString()}` : g.avgBest.toFixed(1)}
                         </td>
                       </tr>
                     ))}
@@ -321,7 +321,7 @@ export function Admin() {
                         <td className="py-2">{src}</td>
                         <td className="py-2 text-right font-hud">{s.players}</td>
                         <td className="py-2 text-right font-hud">{s.finished}</td>
-                        <td className="py-2 text-right font-hud">{s.players ? `${Math.round((s.finished / s.players) * 100)}%` : "—"}</td>
+                        <td className="py-2 text-right font-hud">{s.players ? `${Math.round((s.finished / s.players) * 100)}%` : "-"}</td>
                       </tr>
                     ))}
                   </tbody>

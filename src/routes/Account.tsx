@@ -86,7 +86,7 @@ export function Account() {
           </label>
           {!age13 && (
             <p className="text-xs leading-relaxed text-[var(--ink-faint)]">
-              Under 13? No problem — keep playing with just your username. Your progress stays on this device.
+              Under 13? No problem, keep playing with just your username. Your progress stays on this device.
             </p>
           )}
           {age13 && (
@@ -176,7 +176,7 @@ export function Account() {
               <p className="flex items-start gap-2 text-sm text-[var(--ink)]">
                 <AlertTriangle size={17} className="mt-0.5 shrink-0" style={{ color: "var(--stat-debt)" }} />
                 <span>
-                  If you sign out now, you'll lose <strong>{profile.username || "your username"}</strong>, your Life Points and your progress for good — and nobody can use that username again, including you.
+                  If you sign out now, you'll lose <strong>{profile.username || "your username"}</strong>, your Life Points and your progress for good, and nobody can use that username again, including you.
                 </span>
               </p>
               <div className="flex flex-wrap gap-2">

@@ -79,7 +79,7 @@ export function Arcade() {
               }}
             >
               <Ticket size={13} strokeWidth={2.5} />
-              {hasFreeTicket ? "1 free play today!" : "Free play used — new one tomorrow"}
+              {hasFreeTicket ? "1 free play today!" : "Free play used, new one tomorrow"}
             </div>
           </div>
 
@@ -129,7 +129,7 @@ export function Arcade() {
                       )}
                     </button>
                   </div>
-                  {shake === g.id && <span className="text-[11px]" style={{ color: "var(--stat-debt)" }}>Not enough Life Points — make some smart choices in the story first.</span>}
+                  {shake === g.id && <span className="text-[11px]" style={{ color: "var(--stat-debt)" }}>Not enough Life Points. Make some smart choices in the story first.</span>}
                 </motion.div>
               );
             })}

@@ -11,7 +11,7 @@ export function About() {
         <h1 className="text-2xl font-bold text-white sm:text-3xl">About Life-Path</h1>
         <p className="text-base leading-relaxed text-white/80">
           Life-Path is one continuous interactive story about the money moments everyone runs
-          into after they're out on their own — a first paycheck, a surprise bill, a business of
+          into after they're out on their own: a first paycheck, a surprise bill, a business of
           your own, a market that won't sit still.
         </p>
         <p className="text-base leading-relaxed text-white/80">
