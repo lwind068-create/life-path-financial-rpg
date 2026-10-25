@@ -218,6 +218,43 @@ export const firstJobArc: StoryArc = {
           ],
         },
       ],
+      nextChapterId: "startup_fork",
+    },
+
+    // The Y in the road. Not a measurement chapter, so it can branch freely.
+    startup_fork: {
+      id: "startup_fork",
+      title: "The fork in the road",
+      icon: "rocket",
+      narrative: "",
+      choices: [],
+      briefing: {
+        when: "Age 24 · The same week",
+        situation:
+          "You got your raise. But the startup calls back: the offer still stands. Stay, and you get steady pay plus your company's stock plan. Join, and you take a pay cut for a slice of a company that could be worth millions — or nothing. This choice changes the rest of your story.",
+        goal: "Pick a path you can afford — and if you take the risk, take it smart.",
+        terms: [
+          { term: "Stock options / equity", meaning: "The right to own part of the company. If it's bought or goes public, your share can be worth a lot. If it fails, $0." },
+          { term: "Acquisition", meaning: "When a bigger company buys a startup. That's usually when employees' equity turns into real money." },
+          { term: "Employee stock purchase plan (ESPP)", meaning: "A benefit where you buy your own company's stock at a discount from your paycheck." },
+        ],
+        trend: "Most startups fail, but a few employees at the ones that succeed end up with life-changing payouts. Having savings first is what lets you take that shot.",
+      },
+      questions: [
+        {
+          id: "fork_q1_path",
+          icon: "rocket",
+          variants: [{ id: "v1", narrative: "Final answer: which path do you take?" }],
+          narrativeIf: [
+            { ifAny: ["auto_save", "raise_saved"], narrative: "Final answer: which path do you take? (Your auto-savings means you'd have a cushion if the startup struggles.)" },
+          ],
+          choices: [
+            { id: "fork_stay", label: "Stay — take the raise and the stock plan", outcomeNarrative: "Steady and solid. Your company's stock plan opens up for you.", financialQualityScore: 4, sets: ["path_corp"] },
+            { id: "fork_join_smart", label: "Join the startup — but negotiate 2x the equity first", outcomeNarrative: "They agree to double your equity. Lower pay, real upside.", financialQualityScore: 5, sets: ["path_startup", "startup_negotiated"] },
+            { id: "fork_join_rush", label: "Join the startup right away — it's exciting", outcomeNarrative: "You're in, with whatever equity they first offered.", financialQualityScore: 2, statEffects: { stress: 1 }, sets: ["path_startup"] },
+          ],
+        },
+      ],
       nextChapterId: "credit_decision",
     },
 
@@ -229,6 +266,20 @@ export const firstJobArc: StoryArc = {
       narrative: "Ten years after your first job offer.",
       choices: [],
       consequences: [
+        // Startup path — earned + luck. Negotiating and extra equity raise the odds and the payout.
+        { id: "su_jackpot_more", text: "Your startup got acquired! Because you negotiated AND took extra equity, your share paid out $2.1M (after taxes)", ifAll: ["path_startup", "startup_negotiated", "more_equity"], chance: 0.45, statEffects: { savings: 2100000 }, sets: ["su_done"] },
+        { id: "su_jackpot", text: "Your startup got acquired! Because you negotiated more equity, your share paid out $1.4M (after taxes)", ifAll: ["path_startup", "startup_negotiated"], ifNone: ["su_done"], chance: 0.4, statEffects: { savings: 1400000 }, sets: ["su_done"] },
+        { id: "su_lucky", text: "Your startup got acquired — but you never negotiated, so your small share paid $350K (after taxes)", ifAll: ["path_startup"], ifNone: ["su_done", "startup_negotiated"], chance: 0.15, statEffects: { savings: 350000 }, sets: ["su_done"] },
+        { id: "su_small", text: "Your startup was sold for a modest price. Your equity paid $40K", ifAll: ["path_startup"], ifNone: ["su_done"], chance: 0.3, statEffects: { savings: 40000 }, sets: ["su_done"] },
+        { id: "su_zero", text: "Your startup shut down. The equity is worth $0 — that's the risk of startups", ifAll: ["path_startup"], ifNone: ["su_done"], sets: ["su_done"] },
+        // Company stock (corporate path)
+        { id: "espp_boom", text: "Your company's stock soared 10x — and you'd put everything in it. It paid off: +$250K", ifAll: ["espp_allin"], chance: 0.2, statEffects: { savings: 250000 }, sets: ["espp_done"] },
+        { id: "espp_bust", text: "Because you held only your company's stock, a bad year cut it 60%", ifAll: ["espp_allin"], ifNone: ["espp_done"], statEffects: { savings: -12000, stress: 2 }, sets: ["espp_done"] },
+        { id: "espp_steady", text: "Because you used the stock plan and sold to diversify, you banked steady gains", ifAll: ["espp_smart"], statEffects: { savings: 40000 } },
+        { id: "espp_smart_boom", text: "Your company's stock also took off — the shares you kept added more", ifAll: ["espp_smart"], chance: 0.2, statEffects: { savings: 80000 } },
+        // The business
+        { id: "biz_chain", text: "A regional chain bought your coffee business for $1.5M — because you priced right, built a cushion, and grew carefully ($1.2M after taxes)", ifAll: ["biz_profit_high", "biz_cushion", "biz_loan_good"], ifNone: ["off_books", "biz_sold"], chance: 0.45, statEffects: { savings: 1200000 }, sets: ["biz_done"] },
+        { id: "biz_chain_ok", text: "Your two coffee carts sold to a local buyer for a solid profit", ifAll: ["biz_expanded"], ifNone: ["biz_done", "off_books"], chance: 0.25, statEffects: { savings: 250000 }, sets: ["biz_done"] },
         { id: "end_index", text: "Because you chose an index fund, it kept growing with the market", ifAll: ["index_fund"], statEffects: { savings: 900 } },
         { id: "end_roth", text: "Because you opened a Roth IRA, it grew tax-free", ifAll: ["roth_ira"], statEffects: { savings: 600 } },
         { id: "end_margin", text: "Because you borrowed to invest, a market dip forced you to sell at a loss", ifAll: ["margin"], statEffects: { savings: -600, stress: 2 } },

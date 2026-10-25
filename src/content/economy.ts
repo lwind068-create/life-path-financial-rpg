@@ -38,6 +38,9 @@ export const RECURRING_COSTS: Record<string, RecurringItem> = {
   raise_saved: { label: "Because you banked your raise, moved straight to savings", amount: 700, transfer: true, because: true },
   raise_half: { label: "Half your raise, moved to savings", amount: 350, transfer: true },
   lifestyle_creep: { label: "Because spending crept up with your raise", amount: -500, because: true },
+  // Startup path (set in the startup fork)
+  startup_pay: { label: "Startup salary (lower than your old job, but you own equity)", amount: -400 },
+  espp_buy: { label: "Company stock purchase plan (10% of pay, bought at a discount)", amount: 450, transfer: true },
   // Credit (set in Reading the Fine Print)
   autopay_full: { label: "Autopay paid your credit card in full", amount: 100000, payment: true },
   autopay_min: { label: "Autopay paid the minimum on your card (the rest keeps charging interest)", amount: 50, paymentPct: 0.06, payment: true, because: true },

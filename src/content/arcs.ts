@@ -5,7 +5,7 @@
 //
 //   1 First Job        job_offer (baseline)
 //   2 Settling In      housing_decision, car_repair_decision
-//   3 The Next Offer   promotion_offer (mirror of job_offer)
+//   3 The Next Offer   promotion_offer (mirror of job_offer), startup_fork (the Y: corporate vs startup)
 //   4 Fine Print       credit_decision, money_traps
 //   5 Business         funding_choice (baseline), pricing_decision, growth_offer (mirror)
 //   6 Running the Show hiring_decision, cashflow_decision
@@ -24,8 +24,8 @@ export const lifePathArc: StoryArc = {
   title: "Life-Path",
   blurb: "One continuous story, from your first paycheck to playing the market.",
   startChapterId: "job_offer",
-  // 13 scenes + the ending chapter itself (pathLength counts the ending as a notch).
-  pathLength: 14,
+  // 14 scenes + the ending chapter itself (pathLength counts the ending as a notch).
+  pathLength: 15,
   chapters: {
     ...firstJobArc.chapters,
     ...settlingInArc.chapters,
@@ -40,7 +40,7 @@ export const lifePathArc: StoryArc = {
 export const CHAPTER_MARKERS: { title: string; icon: string; sceneIds: string[] }[] = [
   { title: "First Job", icon: "briefcase", sceneIds: ["job_offer"] },
   { title: "Settling In", icon: "home", sceneIds: ["housing_decision", "car_repair_decision"] },
-  { title: "The Next Offer", icon: "rocket", sceneIds: ["promotion_offer"] },
+  { title: "The Next Offer", icon: "rocket", sceneIds: ["promotion_offer", "startup_fork"] },
   { title: "Reading the Fine Print", icon: "credit-card", sceneIds: ["credit_decision", "money_traps"] },
   { title: "Starting a Business", icon: "piggy-bank", sceneIds: ["funding_choice", "pricing_decision", "growth_offer"] },
   { title: "Running the Show", icon: "users", sceneIds: ["hiring_decision", "cashflow_decision"] },

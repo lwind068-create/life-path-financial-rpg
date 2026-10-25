@@ -34,7 +34,35 @@ export const finePrintArc: StoryArc = {
         trend: "The average credit card interest rate in the U.S. has been above 20% in recent years — one of the most expensive ways to borrow money.",
       },
       economy: { paycheck: 5900, payByFlag: { job_meridian: 1000 }, bills: 3900 },
+      consequences: [
+        { id: "joined_startup", text: "You joined the startup: your old raise is gone and the pay is lower — but you own equity now", ifAll: ["path_startup"], clears: ["raise_big", "raise_mid", "raise_base", "raise_saved", "raise_half", "job_harbor", "job_meridian"], sets: ["startup_pay"] },
+      ],
       questions: [
+        {
+          id: "credit_q0_espp",
+          icon: "trending-up",
+          showIf: { ifAll: ["path_corp"] },
+          variants: [{ id: "v1", narrative: "Your company offers a stock plan: put up to 10% of each paycheck into company stock at a 15% discount. How do you use it?" }],
+          choices: [
+            { id: "espp_skip", label: "Skip it", outcomeNarrative: "Simple — but you passed on a built-in 15% discount.", financialQualityScore: 3 },
+            { id: "espp_smart", label: "Buy in, then sell regularly and spread the money out", outcomeNarrative: "You lock in the discount without betting everything on one company.", financialQualityScore: 5, sets: ["espp_buy", "espp_smart"] },
+            { id: "espp_allin", label: "Max it out and never sell — I believe in us", outcomeNarrative: "Your job AND your savings now depend on one company. Huge upside, huge risk.", financialQualityScore: 2, statEffects: { stress: 1 }, sets: ["espp_buy", "espp_allin"] },
+          ],
+        },
+        {
+          id: "credit_q0_startup_crunch",
+          icon: "rocket",
+          showIf: { ifAll: ["path_startup"] },
+          variants: [{ id: "v1", narrative: "The startup hits a rough patch. The founder offers everyone a choice: take a 20% pay cut for extra equity, or keep your pay." }],
+          narrativeIf: [
+            { ifAny: ["auto_save", "raise_saved", "car_fund"], narrative: "The startup hits a rough patch. The founder offers: take a 20% pay cut for extra equity, or keep your pay. Your savings habit means you could handle the cut." },
+          ],
+          choices: [
+            { id: "crunch_extra_equity", label: "Take the cut for extra equity — my savings can cover it", outcomeNarrative: "Tighter months, bigger slice of the upside.", financialQualityScore: 5, statEffects: { savings: -1500 }, sets: ["more_equity"] },
+            { id: "crunch_keep_pay", label: "Keep my pay — no extra risk", outcomeNarrative: "Safe choice. Your slice stays the same.", financialQualityScore: 4 },
+            { id: "crunch_panic", label: "Take the cut and put rent on a credit card", outcomeNarrative: "Bigger slice — and growing card debt.", financialQualityScore: 2, statEffects: { debt: 1500, stress: 2 }, sets: ["more_equity"] },
+          ],
+        },
         {
           id: "credit_q1_store_card",
           icon: "credit-card",
