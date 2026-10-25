@@ -13,7 +13,7 @@ body,
 }
 
 body {
-  /* Fixed game palette — deep navy/charcoal base, distinct from the
+  /* Fixed game palette - deep navy/charcoal base, distinct from the
      player's customizable --accent (set per-run in AccentTheme.tsx). */
   --bg-void: #090c14;
   --bg-panel: #10152344;
@@ -24,13 +24,13 @@ body {
   --ink-dim: #8891ab;
   --ink-faint: #565f7d;
 
-  /* Signature progress/XP color — used ONLY for the chapter tracker and
+  /* Signature progress/XP color - used ONLY for the chapter tracker and
      streak, never reused as a stat color or a "success" green. */
   --progress: #ffb020;
   --progress-glow: #ffd873;
   --progress-ink: #2b1600;
 
-  /* Per-stat identity colors — fixed, not player-customizable, so they
+  /* Per-stat identity colors - fixed, not player-customizable, so they
      stay instantly recognizable across every run. */
   --stat-savings: #2fe6a4;
   --stat-savings-dim: #123527;
@@ -42,7 +42,7 @@ body {
   background-color: var(--bg-void);
   color: var(--ink);
   font-family: var(--font-display);
-  /* Accent theme defaults — overridden per-player once a character is built. */
+  /* Accent theme defaults - overridden per-player once a character is built. */
   --accent: #10b981;
   --accent-soft: #6ee7b7;
   --accent-deep: #065f46;

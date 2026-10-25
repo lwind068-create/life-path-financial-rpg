@@ -25,7 +25,7 @@ import { getTrafficSource } from "./engine/analytics";
 getTrafficSource();
 
 function Shell() {
-  // /debug is an internal data-review tool, not part of the game — keep it
+  // /debug is an internal data-review tool, not part of the game - keep it
   // free of game chrome (nav, background, accent theme) so it reads as what
   // it is.
   const { pathname } = useLocation();
