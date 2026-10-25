@@ -183,13 +183,17 @@ export function runChapterEconomy(
   }
 
   // 4. One-time consequences of earlier choices ("Because you…").
+  // Flags as they stand while consequences resolve, so an earlier consequence's
+  // sets/clears can gate a later one (e.g. "jackpot" sets a flag that skips "bust").
+  let live = [...flags];
   for (const c of chapter.consequences ?? []) {
     if (firedConsequences.includes(c.id)) continue;
-    if (!consequenceApplies(c, flags)) continue;
+    if (!consequenceApplies(c, live)) continue;
     if (c.chance !== undefined && rand() >= c.chance) continue;
     fired.push(c.id);
     cleared.push(...(c.clears ?? []));
     added.push(...(c.sets ?? []));
+    live = [...live.filter((f) => !(c.clears ?? []).includes(f)), ...(c.sets ?? [])];
     for (const [key, val] of Object.entries(c.statEffects ?? {}) as [keyof PlayerStats, number][]) {
       if (key === "stress") {
         s.stress = clampStress(s.stress + val);
