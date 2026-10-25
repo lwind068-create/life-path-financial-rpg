@@ -1,4 +1,4 @@
-// The whole game is ONE continuous story — one save slot, one running set
+// The whole game is ONE continuous story - one save slot, one running set
 // of stats, no per-chapter resets. Content is authored across six files
 // (one theme each) and threaded together here via each chapter's
 // nextChapterId. Play order:

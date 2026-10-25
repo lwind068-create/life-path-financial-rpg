@@ -1,5 +1,5 @@
 // Recurring money tied to flags that choices set (see QuestionChoice.sets).
-// Applied at the start of every chapter after the flag is set — this is how
+// Applied at the start of every chapter after the flag is set - this is how
 // a decision in one chapter keeps costing (or paying) you later.
 // Amounts are per chapter "stretch" (about two months).
 import type { LedgerLine } from "../engine/money";
@@ -22,9 +22,9 @@ export const RECURRING_COSTS: Record<string, RecurringItem> = {
   // Job (set in First Job)
   job_harbor: { label: "Harbor & Finch 401(k) match (retirement money, counted in savings)", amount: 290, target: "savings", because: true },
   // Housing (set in Settling In)
-  rent_solo: { label: "Rent — living alone ($1,050/mo)", amount: -2100 },
-  rent_split: { label: "Rent — splitting with a roommate ($700/mo)", amount: -1400 },
-  rent_shared: { label: "Rent — room in a shared house ($550/mo)", amount: -1100 },
+  rent_solo: { label: "Rent, living alone ($1,050/mo)", amount: -2100 },
+  rent_split: { label: "Rent, splitting with a roommate ($700/mo)", amount: -1400 },
+  rent_shared: { label: "Rent, room in a shared house ($550/mo)", amount: -1100 },
   rent_monthly: { label: "Because you chose month-to-month, rent costs $150/mo more", amount: -300, because: true },
   renters_insurance: { label: "Renter's insurance ($15/mo)", amount: -30 },
   furniture_plan: { label: "Because you financed furniture, the payment plan", amount: -250, because: true },

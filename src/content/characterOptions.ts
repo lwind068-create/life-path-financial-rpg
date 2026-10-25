@@ -1,13 +1,13 @@
-// Player color options — presentational only, not arc content. Kept
+// Player color options - presentational only, not arc content. Kept
 // separate from arc files because the chosen color is reused by every arc
 // (it persists across the whole Life-Path series, same as the player's
-// name). There's no avatar/face picker — identity in the UI is just the
+// name). There's no avatar/face picker - identity in the UI is just the
 // name and this color, shown as an initial badge (see PlayerBadge.tsx).
 
 export interface AccentOption {
   id: string;
   label: string;
-  /** Primary brand color — buttons, progress fill, badge ring. */
+  /** Primary brand color - buttons, progress fill, badge ring. */
   primary: string;
   /** Lighter companion, used for gradients. */
   secondary: string;
@@ -41,7 +41,7 @@ export interface UnlockableAccent extends AccentOption {
 }
 
 /**
- * Extra colors NOT offered at character creation — unlocked by spending
+ * Extra colors NOT offered at character creation - unlocked by spending
  * Life Points on the Character page (see routes/Character.tsx). Kept
  * separate from ACCENT_OPTIONS so the starter picker never shows a locked
  * swatch.
@@ -55,7 +55,7 @@ export const UNLOCKABLE_ACCENTS: UnlockableAccent[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Titles — purely cosmetic flair text, unlocked with Life Points and shown
+// Titles - purely cosmetic flair text, unlocked with Life Points and shown
 // next to the player's name on the Character page. No gameplay effect.
 // ---------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ export interface Title {
   cost: number;
 }
 
-/** Always available, free, equipped by default — clears any purchased title. */
+/** Always available, free, equipped by default - clears any purchased title. */
 export const STARTER_TITLE: Title = { id: "none", label: "No title", cost: 0 };
 
 export const UNLOCKABLE_TITLES: Title[] = [
@@ -81,7 +81,7 @@ export function getTitle(id: string | null | undefined): Title {
 }
 
 // ---------------------------------------------------------------------------
-// Badge frames — a decorative ring/glow around PlayerBadge, unlocked with
+// Badge frames - a decorative ring/glow around PlayerBadge, unlocked with
 // Life Points. Purely cosmetic, layered on top of the accent-color ring.
 // ---------------------------------------------------------------------------
 
@@ -93,7 +93,7 @@ export interface Frame {
   ring: string;
 }
 
-/** Always available, free, equipped by default — clears any purchased frame. */
+/** Always available, free, equipped by default - clears any purchased frame. */
 export const STARTER_FRAME: Frame = { id: "none", label: "No frame", cost: 0, ring: "" };
 
 export const UNLOCKABLE_FRAMES: Frame[] = [

@@ -2,7 +2,7 @@
 //
 // Keep all narrative/choice content in files under src/content/ (one file
 // per arc). Nothing in src/engine or src/components should ever import
-// arc-specific text directly — they only know this shape. That's what lets
+// arc-specific text directly - they only know this shape. That's what lets
 // a second arc (e.g. "Starting a Business") get added later by dropping in
 // a new content file, without touching the game engine.
 
@@ -38,7 +38,7 @@ export interface Choice {
 }
 
 /**
- * Choice nested inside a QuestionBeat. Usually has no nextChapterId — the
+ * Choice nested inside a QuestionBeat. Usually has no nextChapterId - the
  * parent Chapter's own nextChapterId governs what happens once every
  * question in the sequence is done. The exception is the LAST question in
  * a chapter that branches (e.g. job_offer): give each of its choices its
@@ -106,9 +106,9 @@ export interface QuestionChoice {
   nextChapterId?: string | "END";
   /** Dollar figure shown as a badge when the parent question has `menuStyle: true`. */
   amount?: number;
-  /** Badge color for that amount — positive (banked), negative (spent), neutral (mixed). */
+  /** Badge color for that amount - positive (banked), negative (spent), neutral (mixed). */
   tone?: "positive" | "negative" | "neutral";
-  /** Flags this choice sets — later chapters react to them (consequences, recurring costs, different questions). */
+  /** Flags this choice sets - later chapters react to them (consequences, recurring costs, different questions). */
   sets?: string[];
   /** Flags this choice clears. */
   clears?: string[];
@@ -118,7 +118,7 @@ export interface QuestionChoice {
 
 export interface NarrativeVariant {
   id: string;
-  /** Short scenario-framing text — one of a few random takes on the same underlying question. */
+  /** Short scenario-framing text - one of a few random takes on the same underlying question. */
   narrative: string;
 }
 
@@ -133,10 +133,10 @@ export interface TickerConfig {
 
 /**
  * One question within a multi-question chapter (see Chapter.questions).
- * `variants` are alternate narrative framings of the SAME decision — one is
+ * `variants` are alternate narrative framings of the SAME decision - one is
  * picked at random each time this question is reached, for replay variety.
  * `choices` stay identical across variants: financialQualityScore integrity
- * (and the position-rotation discipline — see the content files' header
+ * (and the position-rotation discipline - see the content files' header
  * comments) must hold regardless of which variant is showing.
  */
 export interface QuestionBeat {
@@ -146,11 +146,11 @@ export interface QuestionBeat {
   choices: QuestionChoice[];
   /** Optional independent random event, scoped to just this one question. */
   randomEvent?: RandomEvent;
-  /** Optional live-jittering stock ticker board shown above this question's narrative. Purely ambient/visual — never affects scoring. */
+  /** Optional live-jittering stock ticker board shown above this question's narrative. Purely ambient/visual - never affects scoring. */
   tickers?: TickerConfig[];
   /** Optional "here's what actually happened" settled ticker snapshot shown on this question's outcome screen. */
   outcomeTickers?: TickerConfig[];
-  /** Optional quick self-checked arithmetic prompt shown above this question's narrative. Flavor only — never gates progress or affects scoring. */
+  /** Optional quick self-checked arithmetic prompt shown above this question's narrative. Flavor only - never gates progress or affects scoring. */
   mathChallenge?: { prompt: string; answer: number; unit?: string };
   /** Render `choices` as a visual spending menu (price + pos/neg badge per card) instead of the default choice-button list. Uses each choice's `amount`/`tone`. */
   menuStyle?: boolean;
@@ -158,7 +158,7 @@ export interface QuestionBeat {
   sliderStyle?: boolean;
   /** Only ask this question when the flag condition holds (cause and effect). Never use on baseline/mirror chapters. */
   showIf?: FlagCondition;
-  /** Replaces the variant narrative when its condition holds — lets a question refer back to an earlier choice. */
+  /** Replaces the variant narrative when its condition holds - lets a question refer back to an earlier choice. */
   narrativeIf?: (FlagCondition & { narrative: string })[];
 }
 
@@ -180,7 +180,7 @@ export interface Chapter {
   choices: Choice[];
   /**
    * A sequence of questions played back-to-back within this one chapter
-   * "scene" — the chapter tracker doesn't advance until the last one is
+   * "scene" - the chapter tracker doesn't advance until the last one is
    * answered. When set, `narrative`/`choices` above are ignored.
    */
   questions?: QuestionBeat[];
@@ -221,7 +221,7 @@ export interface StoryArc {
   startChapterId: string;
   /**
    * Number of chapters in a single playthrough's path (intro through
-   * ending), NOT `Object.keys(chapters).length` — that count also includes
+   * ending), NOT `Object.keys(chapters).length` - that count also includes
    * branch variants a given player never visits. Drives the chapter
    * tracker's notch count, so it must stay the same across every branch.
    */
