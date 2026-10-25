@@ -75,7 +75,7 @@ export function PortfolioSim({ onDone }: { onDone: (r: GameResult) => void }) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-sm text-[var(--ink-dim)]">
-          Split {money(START_CASH)} between four investments, then watch 10 years play out. Crashes happen — how will your mix hold up?
+          Split {money(START_CASH)} between four investments, then watch 10 years play out. Crashes happen. How will your mix hold up?
         </p>
         <div className="flex flex-col gap-2">
           {ASSETS.map((a) => (

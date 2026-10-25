@@ -29,7 +29,7 @@ export function NeedOrWant({ onDone }: { onDone: (r: GameResult) => void }) {
       headline: `${score} sorted right`,
       lines: [
         `${misses} mix-up${misses === 1 ? "" : "s"}.`,
-        "Needs keep you housed, fed, healthy and able to work. Everything else is a want — fine in a budget, but it comes after the needs.",
+        "Needs keep you housed, fed, healthy and able to work. Everything else is a want: fine in a budget, but it comes after the needs.",
       ],
     });
   }, [started, timeLeft, score, misses, onDone]);
@@ -59,7 +59,7 @@ export function NeedOrWant({ onDone }: { onDone: (r: GameResult) => void }) {
     return (
       <div className="flex flex-col items-center gap-4 py-4 text-center">
         <p className="text-sm text-[var(--ink-dim)]">
-          An expense pops up — is it a <strong className="text-[var(--ink)]">Need</strong> or a <strong className="text-[var(--ink)]">Want</strong>? You have {BLITZ_SECONDS} seconds.
+          An expense pops up: is it a <strong className="text-[var(--ink)]">Need</strong> or a <strong className="text-[var(--ink)]">Want</strong>? You have {BLITZ_SECONDS} seconds.
         </p>
         <button type="button" onClick={() => setStarted(true)} className="rounded-xl px-8 py-3 text-base font-bold" style={{ background: "var(--accent)", color: "var(--accent-ink)" }}>
           Go!

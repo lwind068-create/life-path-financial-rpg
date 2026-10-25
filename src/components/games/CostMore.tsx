@@ -34,7 +34,7 @@ export function CostMore({ onDone }: { onDone: (r: GameResult) => void }) {
         score: total,
         reward: costMoreReward(total),
         headline: `${total} / ${rounds.length} right`,
-        lines: ["Small things you buy over and over often cost more than one big purchase. Multiply by how often — that's the real price."],
+        lines: ["Small things you buy over and over often cost more than one big purchase. Multiply by how often: that's the real price."],
       });
       return;
     }
