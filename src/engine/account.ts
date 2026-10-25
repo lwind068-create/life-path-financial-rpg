@@ -26,7 +26,7 @@ import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db, getUid, remoteLoggingEnabled } from "./firebaseClient";
 
 /** Emails allowed to open the private stats dashboard (must be verified). Keep in sync with firestore.rules. */
-export const ADMIN_EMAILS = ["lwind068@gmail.com", "windl28@cbchs.org"];
+export const ADMIN_EMAILS = ["lwind068@gmail.com", "windl28@cbchs.org", "lifepathgame@gmail.com"];
 
 const SAVE_KEYS = ["lifepath:profile", "lifepath:progress", "lifepath:decisionLog", "lifepath:trafficSource"] as const;
 
@@ -87,7 +87,12 @@ function friendlyError(e: unknown): string {
     return "Email or password is wrong.";
   if (code.includes("too-many-requests")) return "Too many tries. Wait a minute and try again.";
   if (code.includes("network")) return "Couldn't connect. Check your internet.";
-  return "Something went wrong. Try again.";
+  if (code.includes("provider-already-linked")) return "This account already has an email saved. Use \"Log in\" with that email instead.";
+  if (code.includes("requires-recent-login")) return "For security, sign out and log back in, then try again.";
+  if (code.includes("operation-not-allowed") || code.includes("admin-restricted"))
+    return "Email accounts are switched off right now. (Error: " + code + ")";
+  console.warn("Account error:", e);
+  return "Something went wrong. Try again." + (code ? " (" + code + ")" : "");
 }
 
 /** Adds email + password to the current (anonymous) account. Same uid, username and progress. */
