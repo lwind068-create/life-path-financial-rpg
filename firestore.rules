@@ -15,7 +15,7 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email in ['lwind068@gmail.com', 'windl28@cbchs.org'];
+        && request.auth.token.email in ['lwind068@gmail.com', 'windl28@cbchs.org', 'lifepathgame@gmail.com'];
     }
 
     // ---- Research data --------------------------------------------------
