@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
-// Arcade — finance mini-games played with Life Points.
+// Arcade - finance mini-games played with Life Points.
 //
 // Each play costs Life Points (one free play a day), and good play pays
-// Life Points back. Rewards are driven by skill and smart decisions —
-// diversifying, sorting needs from wants, doing the math — not by luck
+// Life Points back. Rewards are driven by skill and smart decisions -
+// diversifying, sorting needs from wants, doing the math - not by luck
 // alone, so it never works like a slot machine. Arcade results are kept
 // separate from the story's hidden research scoring (scoring.ts).
 // ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ export const ARCADE_GAMES: ArcadeGame[] = [
   {
     id: "costmore",
     name: "Which Costs More?",
-    tagline: "Little habits vs. big purchases — 5 rounds.",
+    tagline: "Little habits vs. big purchases: 5 rounds.",
     lesson: "Small daily spending adds up fast.",
     cost: 8,
     maxReward: 15,
@@ -115,7 +115,7 @@ export function simulatePortfolio(alloc: Record<AssetId, number>, rand: () => nu
   return years;
 }
 
-/** What $10,000 in a savings account becomes in 10 years — the bar to beat. */
+/** What $10,000 in a savings account becomes in 10 years - the bar to beat. */
 export const SAVINGS_BASELINE = Math.round(START_CASH * Math.pow(1.03, SIM_YEARS));
 
 /**
@@ -180,7 +180,7 @@ export const BLITZ_ITEMS: BlitzItem[] = [
 
 export const BLITZ_SECONDS = 30;
 
-/** 1 point per correct answer past the first 5, max 20 — you have to be quick AND right. */
+/** 1 point per correct answer past the first 5, max 20 - you have to be quick AND right. */
 export function blitzReward(score: number): number {
   return Math.max(0, Math.min(20, score - 5));
 }

@@ -1,11 +1,11 @@
 // Optional Firestore backend for aggregating decision-log data across real
 // players. Everything else in the app works fine with this fully absent
 // (localStorage remains the source of truth for a single browser's own
-// Debug view) — this module just adds a best-effort remote copy so data
+// Debug view) - this module just adds a best-effort remote copy so data
 // can be aggregated across players instead of staying trapped per-device.
 //
-// Configured via Vite env vars (see .env.example). If any are missing —
-// e.g. no Firebase project has been set up yet — `db` is null and every
+// Configured via Vite env vars (see .env.example). If any are missing -
+// e.g. no Firebase project has been set up yet - `db` is null and every
 // caller in this app treats that as "remote logging is off" and silently
 // no-ops. Never throws, never blocks gameplay.
 import { initializeApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
@@ -67,6 +67,6 @@ export function getUid(): Promise<string | null> {
 if (!isConfigured && import.meta.env.DEV) {
   // eslint-disable-next-line no-console
   console.info(
-    "[firebaseClient] No Firebase config found — decisions are only logged to localStorage on this device. See .env.example / SETUP_FIREBASE.md to turn on remote data collection.",
+    "[firebaseClient] No Firebase config found, decisions are only logged to localStorage on this device. See .env.example / SETUP_FIREBASE.md to turn on remote data collection.",
   );
 }

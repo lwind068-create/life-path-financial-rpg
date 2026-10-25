@@ -1,13 +1,13 @@
 // Single abstraction point for persisting decisions.
 //
 // Every choice the player makes flows through logDecision(). It always
-// writes to localStorage first — that's what powers the in-session Debug
+// writes to localStorage first - that's what powers the in-session Debug
 // view and never depends on the network. It then makes a best-effort,
 // fire-and-forget write to Firestore (see firebaseClient.ts) so decisions
 // from every real player can be aggregated in one place instead of staying
 // trapped in each player's own browser. If no Firebase project is
 // configured, or the write fails (offline, blocked, etc.), that second
-// step silently no-ops — it must never throw, block, or affect gameplay.
+// step silently no-ops - it must never throw, block, or affect gameplay.
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import type { DecisionLogEntry } from "../content/types";
 import { db, getUid, remoteLoggingEnabled } from "./firebaseClient";
@@ -37,7 +37,7 @@ async function logDecisionRemote(entry: DecisionLogEntry): Promise<void> {
       createdAt: serverTimestamp(),
     });
   } catch {
-    // Network hiccup, ad blocker, quota, whatever — the local log is the
+    // Network hiccup, ad blocker, quota, whatever - the local log is the
     // source of truth for gameplay, so this failure is invisible to the
     // player and not retried.
   }

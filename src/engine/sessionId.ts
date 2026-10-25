@@ -1,5 +1,5 @@
-// A random, anonymous per-browser identifier — not tied to any real-world
-// identity — used only to group this browser's decisions/summary together
+// A random, anonymous per-browser identifier - not tied to any real-world
+// identity - used only to group this browser's decisions/summary together
 // in the remote Firestore data (see firebaseClient.ts). Nothing about the
 // player's real identity is ever collected. Falls back to a timestamp-based
 // id if crypto.randomUUID isn't available (older browsers/webviews).
@@ -20,7 +20,7 @@ export function getSessionId(): string {
     window.localStorage.setItem(STORAGE_KEY, fresh);
     return fresh;
   } catch {
-    // localStorage unavailable (private mode, etc.) — fall back to a
+    // localStorage unavailable (private mode, etc.) - fall back to a
     // per-load id. Remote entries from this session just won't be grouped
     // with any other session from the same browser.
     return generateId();

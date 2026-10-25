@@ -1,15 +1,15 @@
 // ---------------------------------------------------------------------------
-// Life Points — a player-facing reward currency. Deliberately kept separate
+// Life Points - a player-facing reward currency. Deliberately kept separate
 // from the hidden `financialQualityScore` research measure in scoring.ts.
 //
 // (Historical note) On the game's two baseline/mirror measurement chapters (flagged via
-// Chapter.isBaselineChoice / isMirrorChoice — currently job_offer /
+// Chapter.isBaselineChoice / isMirrorChoice - currently job_offer /
 // promotion_offer and funding_choice / growth_offer), every choice awards
 // the SAME flat number of points no matter which one is picked. That keeps
 // the points economy from ever creating an incentive to "solve for the
 // points" on exactly the two decisions the knowledge-gain comparison
 // depends on. Everywhere else in the story, points scale with decision
-// quality — same 1-5 financialQualityScore already used for scoring, just
+// quality - same 1-5 financialQualityScore already used for scoring, just
 // turned into an ordinary, visible game reward instead of a hidden one.
 // ---------------------------------------------------------------------------
 

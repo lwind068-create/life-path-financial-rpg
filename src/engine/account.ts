@@ -6,7 +6,7 @@
 // uid, username and progress all stay the same. They can then log in on any
 // device and pick up where they left off.
 //
-// Players under 13 never give an email (COPPA) — their progress lives on
+// Players under 13 never give an email (COPPA) - their progress lives on
 // their device, plus a cloud copy tied to their anonymous account.
 //
 // Cloud save: saves/{uid} holds the same JSON the game keeps in

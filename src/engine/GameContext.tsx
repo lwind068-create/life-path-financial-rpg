@@ -53,7 +53,7 @@ const PROGRESS_KEY = "lifepath:progress";
 
 const initialStats: PlayerStats = { ...STARTING_STATS };
 
-/** Slim shape covering both Choice (single-question chapters) and QuestionChoice (multi-question chapters) — all display/scoring needs, no nextChapterId. */
+/** Slim shape covering both Choice (single-question chapters) and QuestionChoice (multi-question chapters) - all display/scoring needs, no nextChapterId. */
 interface OutcomeChoice {
   id: string;
   label: string;
@@ -62,7 +62,7 @@ interface OutcomeChoice {
   statEffects?: Partial<PlayerStats>;
 }
 
-/** The whole game is one character, one save slot — this is that character. */
+/** The whole game is one character, one save slot - this is that character. */
 interface PlayerProfile {
   /** Unique username claimed on first visit (see engine/username.ts). Empty until claimed. */
   username: string;
@@ -70,11 +70,11 @@ interface PlayerProfile {
   accentId: string | null;
   /** True once the player has explicitly confirmed their color (clicked "Let's go"). */
   onboarded: boolean;
-  /** Running total across the whole story. Since there's only ever one save slot now, this is the same as `progress.stats` — kept as its own field so it survives a "play again" without also wiping the character. */
+  /** Running total across the whole story. Since there's only ever one save slot now, this is the same as `progress.stats` - kept as its own field so it survives a "play again" without also wiping the character. */
   cumulativeStats: PlayerStats;
-  /** Spendable Life Points balance — see engine/lifePoints.ts. Goes down when a color is unlocked. */
+  /** Spendable Life Points balance - see engine/lifePoints.ts. Goes down when a color is unlocked. */
   lifePoints: number;
-  /** Lifetime Life Points ever earned, never decreases — drives the player's rank/title. */
+  /** Lifetime Life Points ever earned, never decreases - drives the player's rank/title. */
   totalLifePointsEarned: number;
   /** Ids of UNLOCKABLE_ACCENTS the player has purchased. */
   unlockedAccentIds: string[];
@@ -86,7 +86,7 @@ interface PlayerProfile {
   frameId: string | null;
   /** Ids of UNLOCKABLE_FRAMES the player has purchased. */
   unlockedFrameIds: string[];
-  /** Daily streak, daily quests, active boost, freezes, and the Savings Vault — see engine/boosts.ts. */
+  /** Daily streak, daily quests, active boost, freezes, and the Savings Vault - see engine/boosts.ts. */
   boosts: BoostState;
 }
 
@@ -98,15 +98,15 @@ interface StoryProgress {
   /** Which randomly-picked narrative variant is showing for the current question. */
   currentVariantIndex: number;
   stats: PlayerStats;
-  /** Snapshot of `stats` after every choice, oldest first — feeds the stat sparklines. */
+  /** Snapshot of `stats` after every choice, oldest first - feeds the stat sparklines. */
   statsHistory: PlayerStats[];
-  /** Chapters completed so far this run, in order — drives the chapter tracker and the home-screen roadmap. */
+  /** Chapters completed so far this run, in order - drives the chapter tracker and the home-screen roadmap. */
   visitedChapterIds: string[];
   /** Increments on every choice made without restarting; resets on "Play again." */
   streak: number;
-  /** Story content version this save was made with — older saves restart the story (see loadProgress). */
+  /** Story content version this save was made with - older saves restart the story (see loadProgress). */
   contentVersion: number;
-  /** Flags set by earlier choices (see QuestionChoice.sets) — drive consequences and recurring costs. */
+  /** Flags set by earlier choices (see QuestionChoice.sets) - drive consequences and recurring costs. */
   flags: string[];
   /** Consequence ids already applied, so each fires once. */
   firedConsequences: string[];
@@ -114,7 +114,7 @@ interface StoryProgress {
   briefingFor: string | null;
   /** "Since last chapter" money lines for the current briefing. */
   ledger: LedgerLine[];
-  /** Money snapshot at the start of each chapter — drives the money-over-time chart. */
+  /** Money snapshot at the start of each chapter - drives the money-over-time chart. */
   moneyHistory: { label: string; cash: number; savings: number; debt: number }[];
 }
 
@@ -165,7 +165,7 @@ function loadProfile(): PlayerProfile {
     const raw = window.localStorage.getItem(PROFILE_KEY);
     if (!raw) return freshProfile();
     const parsed = JSON.parse(raw) as Partial<PlayerProfile>;
-    // Older saves predate boosts — merge field by field so they get defaults.
+    // Older saves predate boosts - merge field by field so they get defaults.
     return { ...freshProfile(), ...parsed, boosts: { ...freshBoostState(), ...(parsed.boosts ?? {}) } };
   } catch {
     return freshProfile();
@@ -252,7 +252,7 @@ interface GameContextValue {
   continueFromNarrative: () => void;
   makeChoice: (choiceId: string) => void;
   acknowledgeOutcome: () => void;
-  /** Restarts the story from the top — same character, fresh stats and progress. */
+  /** Restarts the story from the top - same character, fresh stats and progress. */
   resetStoryProgress: () => void;
   /** Wipes everything: character, color, progress, the whole decision log. Starts over from the name screen. */
   resetEverything: () => void;
@@ -342,7 +342,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [progress.stats, commitProfile]);
 
   // Upserts this player's remote summary doc (see logPlayerSummary.ts)
-  // after every completed chapter, not just at the ending — so a player
+  // after every completed chapter, not just at the ending - so a player
   // who quits partway through still shows up in the aggregate data instead
   // of only ever-finishing players counting. visitedChapterIds only grows
   // when goToChapter moves the player off a completed chapter (including
@@ -377,7 +377,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
     track("chapter_completed", { chapters_completed: progress.visitedChapterIds.length });
     if (currentChapterNode?.isEnding) track("game_completed", { net_worth: nw });
-    // Intentionally keyed only on chapter-completion count — this should
+    // Intentionally keyed only on chapter-completion count - this should
     // fire once per chapter boundary, not on every stat/profile tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress.visitedChapterIds.length]);
@@ -391,7 +391,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [profile, progress]);
 
   // Keep the public score in sync with Life Points earned anywhere (story,
-  // quests, Arcade) — debounced so a burst of rewards is one write.
+  // quests, Arcade) - debounced so a burst of rewards is one write.
   useEffect(() => {
     if (!profile.username) return;
     const t = window.setTimeout(() => {

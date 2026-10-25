@@ -2,7 +2,7 @@
 //
 // Each doc holds only what's shown publicly: the player's unique username
 // and two scores. firestore.rules only lets a signed-in player write their
-// own doc, and only under the username they actually own — so names on the
+// own doc, and only under the username they actually own - so names on the
 // board are unique and scores can't be overwritten by anyone else. The
 // research data in players/ stays unreadable from the client.
 //

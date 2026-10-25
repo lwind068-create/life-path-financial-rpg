@@ -2,8 +2,8 @@
 // capitals ("Luke" and "luke" are the same name).
 //
 // Firestore layout (enforced in firestore.rules):
-//   usernames/{lowercase name} = { username, uid, createdAt }  — create-only
-//   users/{uid}                = { username, createdAt }       — create-only
+//   usernames/{lowercase name} = { username, uid, createdAt }  - create-only
+//   users/{uid}                = { username, createdAt }       - create-only
 // Both are written in one batch; the rules require them to point at each
 // other, so a name can't be claimed twice and a player can't claim two names.
 import { doc, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";

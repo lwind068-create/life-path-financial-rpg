@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // The money system.
 //
-// Four numbers: cash (checking — what you spend from), savings, debt (credit
+// Four numbers: cash (checking - what you spend from), savings, debt (credit
 // card / loans) and stress. Spending works the way it does in real life:
 //
 //   1. Purchases come out of CASH.
@@ -90,12 +90,12 @@ function spendCash(s: PlayerStats, amount: number, notes: MoneyNote[], allowSavi
     if (fromSavings > 0) {
       s.savings -= fromSavings;
       rest -= fromSavings;
-      notes.push({ text: `Not enough cash — ${money(fromSavings)} came out of your savings.`, tone: "bad" });
+      notes.push({ text: `Not enough cash: ${money(fromSavings)} came out of your savings.`, tone: "bad" });
     }
   }
   if (rest > 0) {
     s.debt += rest;
-    notes.push({ text: `You ran out of money — ${money(rest)} went on your credit card (≈24% interest).`, tone: "bad" });
+    notes.push({ text: `You ran out of money: ${money(rest)} went on your credit card (≈24% interest).`, tone: "bad" });
   }
 }
 

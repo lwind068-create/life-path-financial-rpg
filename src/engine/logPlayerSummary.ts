@@ -1,5 +1,5 @@
 // Writes/updates one summary document per anonymous player, called after
-// every chapter (see GameContext.tsx) rather than only at the ending — so
+// every chapter (see GameContext.tsx) rather than only at the ending - so
 // someone who plays three chapters and closes the tab still shows up in
 // the aggregate data instead of vanishing entirely. `completed` is what
 // distinguishes a finished run from a dropped-off one; scripts/fetch-stats.mjs
@@ -30,7 +30,7 @@ export interface PlayerSummaryInput {
 export async function logPlayerSummary(input: PlayerSummaryInput): Promise<void> {
   if (!remoteLoggingEnabled || !db) return;
   try {
-    // One summary doc per player account (players/{uid}) — see firestore.rules.
+    // One summary doc per player account (players/{uid}) - see firestore.rules.
     const uid = await getUid();
     if (!uid) return;
     const source = getTrafficSource();
@@ -48,7 +48,7 @@ export async function logPlayerSummary(input: PlayerSummaryInput): Promise<void>
         netWorth: input.netWorth,
         chaptersCompleted: input.chaptersCompleted,
         completed: input.completed,
-        // First-touch channel (utm_source / referrer) — see analytics.ts.
+        // First-touch channel (utm_source / referrer) - see analytics.ts.
         trafficSource: source.source,
         trafficCampaign: source.campaign,
         updatedAt: serverTimestamp(),
@@ -56,7 +56,7 @@ export async function logPlayerSummary(input: PlayerSummaryInput): Promise<void>
       { merge: true },
     );
   } catch {
-    // Best-effort only — see header comment.
+    // Best-effort only - see header comment.
   }
 }
 

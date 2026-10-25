@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Boosts, daily streak, daily quests, and the Savings Vault — the "reason to
+// Boosts, daily streak, daily quests, and the Savings Vault - the "reason to
 // come back tomorrow" layer on top of Life Points (engine/lifePoints.ts).
 //
 // Everything here is spent and earned in Life Points. None of it changes
@@ -218,7 +218,7 @@ export interface BoostResult {
   state: BoostState;
   /** Spendable Life Points to add to the balance (also counts toward lifetime). */
   earned: number;
-  /** Points earned that stay locked in the vault — count toward lifetime only. */
+  /** Points earned that stay locked in the vault - count toward lifetime only. */
   lifetimeOnly?: number;
   notices: string[];
 }
@@ -289,7 +289,7 @@ export function registerActivity(state: BoostState, today: string = dayKey()): B
     } else if (missed <= streakFreezes) {
       streakFreezes -= missed;
       dailyStreak = s.dailyStreak + 1;
-      notices.push(`Streak Freeze used — your ${s.dailyStreak}-day streak is safe`);
+      notices.push(`Streak Freeze used, your ${s.dailyStreak}-day streak is safe`);
     } else {
       dailyStreak = 1;
       if (s.dailyStreak > 1) notices.push(`Your ${s.dailyStreak}-day streak ended. New streak started!`);

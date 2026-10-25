@@ -9,7 +9,7 @@
 // `promotion_offer` chapters are structurally parallel (same tradeoff
 // shape, same 1-5 quality tiers) so the pre/post comparison is defensible,
 // and the full decision log is always available, unredacted, to anyone
-// with legitimate access (see routes/Debug.tsx) — this file must never be
+// with legitimate access (see routes/Debug.tsx) - this file must never be
 // changed to hide, obfuscate, or misrepresent what data is collected or
 // how the "knowledge gain" figure is derived.
 //
@@ -44,7 +44,7 @@ function averageScoreForChapter(
  * Finds the arc's baseline chapter and the chapter(s) that mirror it, then
  * diffs the player's financialQualityScore on each from the decision log.
  * Baseline/mirror chapters may contain several questions (see
- * Chapter.questions) — in that case each side is the AVERAGE score across
+ * Chapter.questions) - in that case each side is the AVERAGE score across
  * every question logged under that chapterId, giving a steadier pre/post
  * comparison than a single question would.
  */
@@ -92,7 +92,7 @@ export function computeAverageQualityScore(
 /**
  * Narrative-flavored, non-numeric social-proof line for the share card.
  * Computed from a fixed reference distribution for the MVP (no backend to
- * aggregate real player data against yet) — swap `sampleGain` for a real
+ * aggregate real player data against yet) - swap `sampleGain` for a real
  * aggregate once one exists. Never shows a raw score.
  */
 export function computeSocialProofPercentile(gain: number | null): number {

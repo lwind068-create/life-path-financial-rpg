@@ -2,7 +2,7 @@
 //
 // 1. Vercel Web Analytics (<Analytics /> in App.tsx) counts page views,
 //    visitors, referrers, countries and devices. No code needed here.
-// 2. Google Analytics for Firebase — funnel events (start clicked, chapter
+// 2. Google Analytics for Firebase - funnel events (start clicked, chapter
 //    finished, game finished, ending shared). Only runs when
 //    VITE_FIREBASE_MEASUREMENT_ID is set; otherwise every call no-ops.
 //
@@ -74,7 +74,7 @@ function detectSource(): TrafficSource {
       }
     }
   } catch {
-    // unparsable referrer — treat as direct
+    // unparsable referrer - treat as direct
   }
   return { source: "direct", campaign: "", firstSeenAt: Date.now() };
 }
