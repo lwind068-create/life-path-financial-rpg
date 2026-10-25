@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Trophy, Crown, Zap } from "lucide-react";
 import { AnimatedNumber } from "./AnimatedNumber";
-import { fetchTopEntries, type LeaderboardEntry, type LeaderboardMetric } from "../engine/leaderboard";
+import { fetchMyEntry, fetchTopEntries, type LeaderboardEntry, type LeaderboardMetric } from "../engine/leaderboard";
 import { getUid } from "../engine/firebaseClient";
 
 interface LeaderboardProps {
@@ -37,23 +37,42 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
   const [loaded, setLoaded] = useState(false);
   const [myUid, setMyUid] = useState<string | null>(null);
 
+  const [mine, setMine] = useState<LeaderboardEntry | null>(null);
+
   useEffect(() => {
     void getUid().then(setMyUid);
   }, []);
 
+  // Load now, then keep it live: every 20s while the page is open, and
+  // whenever the player comes back to the tab.
   useEffect(() => {
     let cancelled = false;
-    void fetchTopEntries(metric, size).then((result) => {
-      if (cancelled) return;
-      setEntries(result);
-      setLoaded(true);
-    });
+    const load = () => {
+      void fetchTopEntries(metric, size).then((result) => {
+        if (cancelled) return;
+        setEntries(result);
+        setLoaded(true);
+      });
+      void fetchMyEntry().then((m) => {
+        if (!cancelled) setMine(m);
+      });
+    };
+    load();
+    const timer = window.setInterval(load, 20000);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
     };
   }, [metric, size]);
 
-  const playerValue = metric === "netWorth" ? playerNetWorth : playerLifePoints;
+  // Board scores are best-ever, so the player's own row is too.
+  const playerValue =
+    metric === "netWorth"
+      ? Math.max(playerNetWorth, mine?.netWorth ?? -Infinity)
+      : Math.max(playerLifePoints, mine?.lifePoints ?? 0);
   const lowerName = playerName.toLowerCase();
   const others: Row[] = (entries ?? [])
     .filter((e) => e.uid !== myUid && e.name.toLowerCase() !== lowerName)
@@ -151,7 +170,7 @@ export function Leaderboard({ playerName, playerNetWorth, playerLifePoints, comp
       {!compact && !onlyYou && !boardUnavailable && (
         <p className="text-left text-[11px] leading-relaxed text-[var(--ink-faint)]">
           {metric === "netWorth"
-            ? "Real players, ranked by savings minus debt."
+            ? "Real players, ranked by their best net worth (savings minus debt) in any run."
             : "Real players, ranked by lifetime Life Points earned — story, quests and Arcade all count. Spending never lowers your spot."}
         </p>
       )}
